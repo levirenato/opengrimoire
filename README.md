@@ -24,6 +24,20 @@ Diferente de plataformas complexas, este projeto foi construído para ser **leve
 
 ---
 
+## Screenshots
+<img width="1342" height="620" alt="home" src="https://github.com/user-attachments/assets/64fdd289-13c4-43e2-8b9a-bd464ce001c4" />
+
+<img width="612" height="625" alt="image" src="https://github.com/user-attachments/assets/91275ecb-88a5-490e-b4f0-df3b3669baba" />
+
+<img width="1220" height="473" alt="image" src="https://github.com/user-attachments/assets/f7ee1a33-950b-4951-96f2-ca46f39ce93a" />
+
+<img width="1220" height="565" alt="image" src="https://github.com/user-attachments/assets/fdb0eb26-d8e9-4483-8f79-d5e19477024a" />
+
+<img width="298" height="648" alt="image" src="https://github.com/user-attachments/assets/1937a2f1-8b7f-4084-9680-3042bdc0a60d" />
+
+<img width="291" height="652" alt="image" src="https://github.com/user-attachments/assets/bf6878b8-20cb-4de5-b9e6-2cfbd6f86462" />
+
+
 ## Como Usar
 
 Não é necessário instalar nada (Node, Python, PHP, etc). É front-end puro!
