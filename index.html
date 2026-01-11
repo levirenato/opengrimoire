@@ -45,6 +45,10 @@
         <button class="btn-icon" onclick="closeCharacter()">
           <span class="material-icons-round">arrow_back</span> <span data-i18n="btn_back">Voltar</span>
         </button>
+        <select id="lang-selector" class="lang-select" onchange="changeLanguage(this.value)">
+          <option value="pt-BR">🇧🇷 PT</option>
+          <option value="en-US">🇺🇸 EN</option>
+        </select>
         <button class="btn-icon" onclick="toggleGlobalTheme()" title="Alternar Tema Claro/Escuro">
           <span class="material-icons-round" id="theme-icon-sheet">light_mode</span>
         </button>
