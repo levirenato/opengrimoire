@@ -284,6 +284,7 @@ function exportCharacter() {
       max_hp: parseInt(char.hpMax) || 0,
       armor_class: parseInt(char.ac) || 10,
       speed: char.speed || "",
+      initiative: char.initiative || "+0",
       proficiency_bonus: char.profBonus || "+2"
     },
     theme_color: char.theme_color || "#b8860b",
@@ -361,6 +362,7 @@ function importCharacter(input) {
         hpMax: json.personal_data?.max_hp || 0,
         ac: json.personal_data?.armor_class || 10,
         speed: json.personal_data?.speed || "",
+        initiative: char.initiative || "+0",
         profBonus: json.personal_data?.proficiency_bonus || "+2",
         theme_color: json.theme_color || "#b8860b",
         str_score: json.attributes?.strength || 10,
