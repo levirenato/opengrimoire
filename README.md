@@ -1,98 +1,103 @@
 # OpenGrimoire
 
-> Teste aqui -> <https://levirenato.github.io/dd-sheet>
+> Test here -> [Demo](https://levirenato.github.io/opengrimoire/)
 
-> Um gerenciador de fichas para D&D 5ª Edição simples, moderno, internacional e 100% offline.
+> A simple, modern, international, and 100% offline D&D 5th Edition character sheet manager.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
 ![Tech](https://img.shields.io/badge/tech-HTML%20%7C%20CSS%20%7C%20JS-orange.svg)
 
-## Sobre o Projeto
+## About the Project
 
-O **OpenGrimoire** (antigo _Grimório de Lendas_) é uma aplicação web focada na simplicidade e na experiência do usuário para gerenciar personagens de RPG de mesa.
+**OpenGrimoire** is a web application focused on simplicity and user experience for managing tabletop RPG characters.
 
-Diferente de plataformas complexas, este projeto foi construído para ser **leve**, **rápido** e **totalmente independente de servidores**. Todos os seus dados ficam salvos no seu próprio navegador ou em arquivos JSON que você controla.
+Unlike complex platforms, this project was built to be **lightweight**, **fast**, and **totally server-independent**. All your data is saved in your own browser or in JSON files that you control.
 
-### Funcionalidades Principais
+### Key Features
 
-- **🌐 Internacionalização (i18n):** Suporte completo para **Português (BR)** e **Inglês (US)** com troca instantânea.
-- **📄 Exportação PDF:** Gere a ficha do seu personagem no modelo oficial da 5e, com formatação garantida (formulários achatados) para impressão perfeita.
-- **💾 Persistência Local:** Tudo é salvo automaticamente no `LocalStorage` do navegador. Nada vai para a nuvem.
-- **📱 Layout Otimizado para Mobile:**
-  - No PC: Visualização em 3 colunas (estilo painel).
-  - No Celular: Ordem inteligente de prioridade (Vida/Combate no topo → Atributos → Equipamentos → Magias).
-- **🌙 Temas Dinâmicos:** Alterne entre o modo **Pergaminho (Claro)** e **Caverna (Escuro)**.
-- **🎨 Personalização:** Escolha a cor de destaque (tema) individual para cada personagem.
-- **✨ Magias Dinâmicas:** A lista de slots de magia se expande automaticamente (Círculos 1 ao 9) baseada no nível do personagem.
-- **🧮 Automação Inteligente:** Cálculo automático de modificadores de atributos.
-- **📤 Importar & Exportar:** Backup completo via JSON, incluindo a imagem do avatar.
+- ** Internationalization (i18n):** Full support for **Portuguese (BR)** and **English (US)** with instant switching.
+- ** PDF Export:** Generate your character sheet in the official 5e model, with guaranteed formatting (flattened forms) for perfect printing.
+- ** Local Persistence:** Everything is saved automatically in the browser's `LocalStorage`. Nothing goes to the cloud.
+- ** Mobile Optimized Layout:**
+  - On PC: 3-column view (dashboard style).
+  - On Mobile: Intelligent priority order (Health/Combat at the top → Attributes → Equipment → Spells).
+- ** Dynamic Themes:** Switch between **Parchment (Light)** and **Cave (Dark)** modes.
+- ** Customization:** Choose individual highlight color (theme) for each character.
+- ** Dynamic Spells:** The spell slot list expands automatically (Levels 1 to 9) based on character level.
+- ** Intelligent Automation:** Automatic calculation of attribute modifiers.
+- ** Import & Export:** Complete backup via JSON, including the avatar image.
 
 ---
 
 ## Screenshots
 
-<img width="1342" height="620" alt="home" src="https://github.com/user-attachments/assets/64fdd289-13c4-43e2-8b9a-bd464ce001c4" />
+<img width="1345" height="737" alt="image" src="https://github.com/user-attachments/assets/672f3cd3-053e-4d66-8e98-91105b09e59d" />
 
-<img width="1220" height="565" alt="image" src="https://github.com/user-attachments/assets/fdb0eb26-d8e9-4483-8f79-d5e19477024a" />
+<img width="1350" height="746" alt="image" src="https://github.com/user-attachments/assets/05dbaeaa-c59c-4e0a-8f1f-af027690489a" />
 
----
+## Demo
 
-## Como Usar
+https://github.com/user-attachments/assets/fe9090a7-4a8e-43a6-9c77-82518b703ec4
 
-Não é necessário instalar nada (Node, Python, PHP, etc). É front-end puro!
-
-### Opção 1: Rodando Localmente
-
-1. Baixe este repositório.
-2. Abra o arquivo `index.html` em qualquer navegador moderno (Chrome, Firefox, Edge).
-3. Pronto!
-
-### Opção 2: Hospedagem (GitHub Pages)
-
-Basta subir os arquivos para um repositório no GitHub e ativar o **GitHub Pages** nas configurações. O projeto já está otimizado para rodar na raiz.
 
 ---
 
-## Estrutura de Arquivos
+## How to Use
 
-O projeto mantém a simplicidade, mas agora modularizado:
+No installation required (Node, Python, PHP, etc). It is pure front-end!
 
-- `index.html`: Estrutura semântica, layout e tags de internacionalização (`data-i18n`).
-- `style.css`: Design System, variáveis CSS, Grid Layout e Media Queries para a ordenação mobile.
-- `script.js`: Lógica central (CRUD, Cálculos, UI).
-- `language.js`: Dicionário de traduções e lógica de troca de idioma.
-- `pdf-exporter.js`: Integração com `pdf-lib` para gerar o PDF oficial preenchido.
+### Option 1: Running Locally
+
+1. Download this repository.
+2. Open the `index.html` file in any modern browser (Chrome, Firefox, Edge).
+3. Done!
+
+### Option 2: Hosting (GitHub Pages)
+
+Just upload the files to a GitHub repository and enable **GitHub Pages** in the settings. The project is already optimized to run at the root.
 
 ---
 
-## Tecnologias Utilizadas
+## File Structure
 
-- **HTML5** Semântico.
-- **CSS3** Moderno (CSS Variables, Flexbox, Grid, Glassmorphism).
-- **Vanilla JavaScript (ES6+)** sem frameworks.
-- **PDF-Lib** (via CDN) para manipulação de PDFs.
+The project maintains simplicity but is now modularized:
+
+- `index.html`: Semantic structure, layout, and internationalization tags (`data-i18n`).
+- `style.css`: Design System, CSS variables, Grid Layout, and Media Queries for mobile ordering.
+- `script.js`: Core logic (CRUD, Calculations, UI).
+- `language.js`: Translation dictionary and language switching logic.
+- `pdf-exporter.js`: Integration with `pdf-lib` to generate the filled official PDF.
+
+---
+
+## Technologies Used
+
+- Semantic **HTML5**.
+- Modern **CSS3** (CSS Variables, Flexbox, Grid, Glassmorphism).
+- **Vanilla JavaScript (ES6+)** without frameworks.
+- **PDF-Lib** (via CDN) for PDF manipulation.
 - **Google Fonts** (Cinzel & Merriweather).
 - **Material Icons**.
 
 ---
 
-## Formato JSON (Backup)
+## JSON Format (Backup)
 
-O sistema exporta um arquivo JSON robusto. Exemplo da estrutura:
+The system exports a robust JSON file. Example structure:
 
 ```json
 {
   "personal_data": {
-    "name": "Ivel, o Negro",
-    "class": "Bardo",
+    "name": "Ivel, the Black",
+    "class": "Bard",
     "level": 5
   },
   "theme_color": "#AB6DAC",
   "spells": {
-      "cantrips": ["Prestidigitação", "Zombaria Viciosa"],
-      "level_1": ["Curar Ferimentos"],
-      "level_3": ["Bola de Fogo"]
+      "cantrips": ["Prestidigitation", "Vicious Mockery"],
+      "level_1": ["Cure Wounds"],
+      "level_3": ["Fireball"]
   },
   "attributes": {
     "strength": 8,
@@ -100,17 +105,16 @@ O sistema exporta um arquivo JSON robusto. Exemplo da estrutura:
   },
   "portrait": "data:image/png;base64..."
 }
----
-
-## Contribuição
-
-Sinta-se livre para fazer um fork deste projeto e adicionar novas funcionalidades! Ideias para o futuro:
-
-- [ ] Rolagem de dados 3D na tela.
-- [ ] Bestiário simples.
-- [ ] Filtro de magias via API Open5e.
-
----
-
-Feito para a comunidade de RPG.
 ```
+
+Contribution
+
+Feel free to fork this project and add new features! Ideas for the future:
+
+    [ ] On-screen 3D dice rolling.
+
+    [ ] Simple bestiary.
+
+    [ ] Spell filtering via Open5e API.
+
+Made for the RPG community.
