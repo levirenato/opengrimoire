@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenGrimoire - d&d charecter sheet</title>
+  <title>OpenGrimoire - d&d character sheet</title>
   <link rel="icon" type="image/x-icon" href="./assets/favicon_io/favicon.ico">
   <link
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Merriweather:wght@300;400;700&display=swap"
@@ -18,28 +18,32 @@
 <body>
   <input type="file" id="import-input" accept=".json" style="display: none;" onchange="importCharacter(this)">
 
-  <!-- DASHBOARD -->
   <div id="dashboard" class="main-container">
     <header class="app-header">
-      <img src="./assets/favicon_io/android-chrome-192x192.png" />
+      <img src="./assets/favicon_io/android-chrome-192x192.png" alt="Logo" />
       <h1 class="title-fantasy">OpenGrimoire</h1>
-      <p class="subtitle">Gerencie seus heróis e suas histórias</p>
-      <button class="theme-toggle-btn" onclick="toggleGlobalTheme()" title="Alternar Tema Claro/Escuro">
-        <span class="material-icons-round" id="theme-icon-home">light_mode</span>
-      </button>
+      <p class="subtitle" data-i18n="subtitle">Gerencie seus heróis e suas histórias</p>
+      <div class="header-controls">
+        <select id="lang-selector" class="lang-select" onchange="changeLanguage(this.value)">
+          <option value="pt-BR">🇧🇷 PT</option>
+          <option value="en-US">🇺🇸 EN</option>
+        </select>
+        <button class="theme-toggle-btn" onclick="toggleGlobalTheme()" title="Alternar Tema Claro/Escuro">
+          <span class="material-icons-round" id="theme-icon-home">light_mode</span>
+        </button>
+      </div>
     </header>
     <button onclick="createNewCharacter()" class="btn-hero neon-effect">
-      <span class="material-icons-round">add_circle</span> Criar Novo Personagem
+      <span class="material-icons-round">add_circle</span> <span data-i18n="btn_create">Criar Novo Personagem</span>
     </button>
     <div class="char-grid-list" id="character-list"></div>
   </div>
 
-  <!-- SHEET EDITOR -->
   <div id="sheet-editor" class="sheet-container hidden">
     <nav class="toolbar surface-elevated">
       <div class="nav-left">
         <button class="btn-icon" onclick="closeCharacter()">
-          <span class="material-icons-round">arrow_back</span> Voltar
+          <span class="material-icons-round">arrow_back</span> <span data-i18n="btn_back">Voltar</span>
         </button>
         <button class="btn-icon" onclick="toggleGlobalTheme()" title="Alternar Tema Claro/Escuro">
           <span class="material-icons-round" id="theme-icon-sheet">light_mode</span>
@@ -47,16 +51,16 @@
       </div>
       <div class="toolbar-actions">
         <button class="btn-secondary" onclick="exportToPDF()">
-          <span class="material-icons-round">picture_as_pdf</span> PDF
+          <span class="material-icons-round">picture_as_pdf</span> <span data-i18n="btn_export_pdf">PDF</span>
         </button>
         <button class="btn-secondary" onclick="exportCharacter()">
-          <span class="material-icons-round">download</span> JSON
+          <span class="material-icons-round">download</span> <span data-i18n="btn_export_json">JSON</span>
         </button>
         <button class="btn-secondary" onclick="document.getElementById('import-input').click()">
-          <span class="material-icons-round">upload</span> Importar
+          <span class="material-icons-round">upload</span> <span data-i18n="btn_import">Importar</span>
         </button>
         <button class="btn-primary" onclick="saveCharacter()">
-          <span class="material-icons-round">save</span> Salvar
+          <span class="material-icons-round">save</span> <span data-i18n="btn_save">Salvar</span>
         </button>
         <button class="btn-danger icon-only" onclick="deleteCharacter()">
           <span class="material-icons-round">delete</span>
@@ -65,7 +69,6 @@
     </nav>
 
     <form id="char-form" class="sheet-layout-new">
-      <!-- HEADER DA FICHA -->
       <section class="sheet-header-new surface-elevated">
         <div class="header-top-row">
           <div class="char-portrait-container">
@@ -81,7 +84,8 @@
 
           <div class="header-info-group">
             <div class="char-name-wrapper">
-              <input type="text" name="charName" class="input-char-name" placeholder="Nome do Personagem">
+              <input type="text" name="charName" class="input-char-name" data-i18n-placeholder="ph_char_name"
+                placeholder="Nome do Personagem">
               <div class="char-color-picker-inline">
                 <input type="hidden" name="charColor" id="charColorInput">
                 <div class="color-dots-inline">
@@ -99,70 +103,66 @@
 
             <div class="header-meta-grid">
               <div class="meta-field">
-                <label>Classe</label>
-                <input type="text" name="charClass" placeholder="Classe">
+                <label data-i18n="lbl_class">Classe</label>
+                <input type="text" name="charClass" data-i18n-placeholder="ph_class" placeholder="Classe">
               </div>
               <div class="meta-field">
-                <label>Nível</label>
+                <label data-i18n="lbl_level">Nível</label>
                 <input type="number" name="level" placeholder="1" class="input-small" oninput="handleLevelChange()">
               </div>
               <div class="meta-field">
-                <label>Raça</label>
-                <input type="text" name="species" placeholder="Raça">
+                <label data-i18n="lbl_race">Raça</label>
+                <input type="text" name="species" data-i18n-placeholder="ph_race" placeholder="Raça">
               </div>
               <div class="meta-field">
-                <label>Antecedente</label>
-                <input type="text" name="background" placeholder="Antecedente">
+                <label data-i18n="lbl_bg">Antecedente</label>
+                <input type="text" name="background" data-i18n-placeholder="ph_bg" placeholder="Antecedente">
               </div>
               <div class="meta-field">
-                <label>Subclasse</label>
-                <input type="text" name="subclass" placeholder="Subclasse">
+                <label data-i18n="lbl_subclass">Subclasse</label>
+                <input type="text" name="subclass" data-i18n-placeholder="ph_subclass" placeholder="Subclasse">
               </div>
               <div class="meta-field">
-                <label>Alinhamento</label>
-                <input type="text" name="alignment" placeholder="Alinhamento">
+                <label data-i18n="lbl_align">Alinhamento</label>
+                <input type="text" name="alignment" data-i18n-placeholder="ph_align" placeholder="Alinhamento">
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- CORPO PRINCIPAL DA FICHA -->
       <div class="sheet-body-grid">
 
-        <!-- COLUNA ESQUERDA: ATRIBUTOS -->
         <aside class="left-sidebar">
-          <!-- Atributos -->
           <div class="attributes-section surface-elevated">
-            <h3 class="section-title-small">Atributos</h3>
             <div class="attributes-list">
               <div class="attr-item">
-                <label>FOR</label>
+                <label data-i18n="attr_str">FOR</label>
                 <input type="text" name="str_mod" class="attr-mod" readonly>
                 <input type="number" name="str_score" class="attr-score" placeholder="10" oninput="updateModifiers()">
               </div>
               <div class="attr-item">
-                <label>DES</label>
+                <label data-i18n="attr_dex">DES</label>
                 <input type="text" name="dex_mod" class="attr-mod" readonly>
                 <input type="number" name="dex_score" class="attr-score" placeholder="10" oninput="updateModifiers()">
               </div>
               <div class="attr-item">
-                <label>CON</label>
+                <label data-i18n="attr_con">CON</label>
                 <input type="text" name="con_mod" class="attr-mod" readonly>
                 <input type="number" name="con_score" class="attr-score" placeholder="10" oninput="updateModifiers()">
               </div>
               <div class="attr-item">
-                <label>INT</label>
+                <label data-i18n="attr_int">INT</label>
                 <input type="text" name="int_mod" class="attr-mod" readonly>
                 <input type="number" name="int_score" class="attr-score" placeholder="10" oninput="updateModifiers()">
               </div>
               <div class="attr-item">
-                <label>SAB</label>
+                <label data-i18n="attr_wis">SAB</label>
                 <input type="text" name="wis_mod" class="attr-mod" readonly>
                 <input type="number" name="wis_score" class="attr-score" placeholder="10" oninput="updateModifiers()">
               </div>
               <div class="attr-item">
-                <label>CAR</label>
+                <label data-i18n="attr_cha">CAR</label>
                 <input type="text" name="cha_mod" class="attr-mod" readonly>
                 <input type="number" name="cha_score" class="attr-score" placeholder="10" oninput="updateModifiers()">
               </div>
@@ -170,190 +170,201 @@
 
             <div class="bonus-inspiration-row">
               <div class="small-box">
-                <label>Inspiração</label>
+                <label data-i18n="lbl_inspiration">Inspiração</label>
                 <input type="checkbox" name="inspiration" class="check-large">
               </div>
               <div class="small-box">
-                <label>Bônus Prof.</label>
+                <label data-i18n="lbl_prof_bonus">Bônus Prof.</label>
                 <input type="text" name="profBonus" placeholder="+2">
               </div>
             </div>
 
             <div class="passive-box">
-              <label>Percepção Passiva</label>
+              <label data-i18n="lbl_passive_perc">Percepção Passiva</label>
               <input type="number" name="passivePerception" placeholder="10">
             </div>
           </div>
 
-          <!-- Testes de Resistência -->
           <div class="saves-section surface-elevated">
-            <h3 class="section-title-small">Resistências</h3>
+            <h3 class="section-title-small" data-i18n="lbl_saves_title">Resistências</h3>
             <div class="save-item">
-              <label><input type="checkbox" name="save_str_prof"><span>Força</span></label>
+              <label><input type="checkbox" name="save_str_prof"><span data-i18n="save_str">Força</span></label>
               <input type="text" name="save_str_mod" placeholder="+0">
             </div>
             <div class="save-item">
-              <label><input type="checkbox" name="save_dex_prof"><span>Destreza</span></label>
+              <label><input type="checkbox" name="save_dex_prof"><span data-i18n="save_dex">Destreza</span></label>
               <input type="text" name="save_dex_mod" placeholder="+0">
             </div>
             <div class="save-item">
-              <label><input type="checkbox" name="save_con_prof"><span>Constituição</span></label>
+              <label><input type="checkbox" name="save_con_prof"><span data-i18n="save_con">Constituição</span></label>
               <input type="text" name="save_con_mod" placeholder="+0">
             </div>
             <div class="save-item">
-              <label><input type="checkbox" name="save_int_prof"><span>Inteligência</span></label>
+              <label><input type="checkbox" name="save_int_prof"><span data-i18n="save_int">Inteligência</span></label>
               <input type="text" name="save_int_mod" placeholder="+0">
             </div>
             <div class="save-item">
-              <label><input type="checkbox" name="save_wis_prof"><span>Sabedoria</span></label>
+              <label><input type="checkbox" name="save_wis_prof"><span data-i18n="save_wis">Sabedoria</span></label>
               <input type="text" name="save_wis_mod" placeholder="+0">
             </div>
             <div class="save-item">
-              <label><input type="checkbox" name="save_cha_prof"><span>Carisma</span></label>
+              <label><input type="checkbox" name="save_cha_prof"><span data-i18n="save_cha">Carisma</span></label>
               <input type="text" name="save_cha_mod" placeholder="+0">
             </div>
           </div>
 
-          <!-- Perícias -->
           <div class="skills-section surface-elevated">
-            <h3 class="section-title-small">Perícias</h3>
+            <h3 class="section-title-small" data-i18n="lbl_skills_title">Perícias</h3>
             <div class="skills-scroll">
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_acro_prof"><span>Acrobacia</span></label>
+                <label><input type="checkbox" name="skill_acro_prof"><span
+                    data-i18n="skill_acro">Acrobacia</span></label>
                 <input type="text" name="skill_acro_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_anim_prof"><span>Adestrar Animais</span></label>
+                <label><input type="checkbox" name="skill_anim_prof"><span data-i18n="skill_anim">Adestrar
+                    Animais</span></label>
                 <input type="text" name="skill_anim_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_arca_prof"><span>Arcanismo</span></label>
+                <label><input type="checkbox" name="skill_arca_prof"><span
+                    data-i18n="skill_arca">Arcanismo</span></label>
                 <input type="text" name="skill_arca_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_athl_prof"><span>Atletismo</span></label>
+                <label><input type="checkbox" name="skill_athl_prof"><span
+                    data-i18n="skill_athl">Atletismo</span></label>
                 <input type="text" name="skill_athl_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_perf_prof"><span>Atuação</span></label>
+                <label><input type="checkbox" name="skill_perf_prof"><span data-i18n="skill_perf">Atuação</span></label>
                 <input type="text" name="skill_perf_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_decp_prof"><span>Enganação</span></label>
+                <label><input type="checkbox" name="skill_decp_prof"><span
+                    data-i18n="skill_decp">Enganação</span></label>
                 <input type="text" name="skill_decp_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_stea_prof"><span>Furtividade</span></label>
+                <label><input type="checkbox" name="skill_stea_prof"><span
+                    data-i18n="skill_stea">Furtividade</span></label>
                 <input type="text" name="skill_stea_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_hist_prof"><span>História</span></label>
+                <label><input type="checkbox" name="skill_hist_prof"><span
+                    data-i18n="skill_hist">História</span></label>
                 <input type="text" name="skill_hist_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_inti_prof"><span>Intimidação</span></label>
+                <label><input type="checkbox" name="skill_inti_prof"><span
+                    data-i18n="skill_inti">Intimidação</span></label>
                 <input type="text" name="skill_inti_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_insg_prof"><span>Intuição</span></label>
+                <label><input type="checkbox" name="skill_insg_prof"><span
+                    data-i18n="skill_insg">Intuição</span></label>
                 <input type="text" name="skill_insg_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_invs_prof"><span>Investigação</span></label>
+                <label><input type="checkbox" name="skill_invs_prof"><span
+                    data-i18n="skill_invs">Investigação</span></label>
                 <input type="text" name="skill_invs_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_medi_prof"><span>Medicina</span></label>
+                <label><input type="checkbox" name="skill_medi_prof"><span
+                    data-i18n="skill_medi">Medicina</span></label>
                 <input type="text" name="skill_medi_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_natu_prof"><span>Natureza</span></label>
+                <label><input type="checkbox" name="skill_natu_prof"><span
+                    data-i18n="skill_natu">Natureza</span></label>
                 <input type="text" name="skill_natu_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_perc_prof"><span>Percepção</span></label>
+                <label><input type="checkbox" name="skill_perc_prof"><span
+                    data-i18n="skill_perc">Percepção</span></label>
                 <input type="text" name="skill_perc_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_pers_prof"><span>Persuasão</span></label>
+                <label><input type="checkbox" name="skill_pers_prof"><span
+                    data-i18n="skill_pers">Persuasão</span></label>
                 <input type="text" name="skill_pers_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_slei_prof"><span>Prestidigitação</span></label>
+                <label><input type="checkbox" name="skill_slei_prof"><span
+                    data-i18n="skill_slei">Prestidigitação</span></label>
                 <input type="text" name="skill_slei_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_reli_prof"><span>Religião</span></label>
+                <label><input type="checkbox" name="skill_reli_prof"><span
+                    data-i18n="skill_reli">Religião</span></label>
                 <input type="text" name="skill_reli_mod" placeholder="+0">
               </div>
               <div class="skill-item">
-                <label><input type="checkbox" name="skill_surv_prof"><span>Sobrevivência</span></label>
+                <label><input type="checkbox" name="skill_surv_prof"><span
+                    data-i18n="skill_surv">Sobrevivência</span></label>
                 <input type="text" name="skill_surv_mod" placeholder="+0">
               </div>
             </div>
           </div>
         </aside>
 
-        <!-- COLUNA CENTRAL: COMBATE E PRINCIPAIS -->
         <main class="center-main">
-          <!-- Stats de Combate -->
           <div class="combat-row surface-elevated">
             <div class="combat-stat">
               <span class="material-symbols-outlined">shield</span>
-              <label>CA</label>
+              <label data-i18n="lbl_ac">CA</label>
               <input type="number" name="ac" placeholder="10">
             </div>
             <div class="combat-stat">
               <span class="material-symbols-outlined">electric_bolt</span>
-              <label>Iniciativa</label>
+              <label data-i18n="lbl_init">Iniciativa</label>
               <input type="text" name="initiative" placeholder="+0">
             </div>
             <div class="combat-stat">
               <span class="material-symbols-outlined">footprint</span>
-              <label>Deslocamento</label>
+              <label data-i18n="lbl_speed">Deslocamento</label>
               <input type="text" name="speed" placeholder="9m">
             </div>
           </div>
 
-          <!-- HP -->
           <div class="hp-section-new surface-elevated">
             <div class="hp-header">
               <span class="material-symbols-outlined">favorite</span>
-              <label>Pontos de Vida</label>
+              <label data-i18n="lbl_hp_title">Pontos de Vida</label>
             </div>
             <div class="hp-inputs">
               <div class="hp-field">
-                <label>Máximo</label>
+                <label data-i18n="lbl_hp_max">Máximo</label>
                 <input type="number" name="hpMax" placeholder="0">
               </div>
               <div class="hp-field hp-current-field">
-                <label>Atual</label>
+                <label data-i18n="lbl_hp_curr">Atual</label>
                 <input type="number" name="hpCurrent" placeholder="0" class="hp-current-input">
               </div>
               <div class="hp-field">
-                <label>Temp</label>
+                <label data-i18n="lbl_hp_temp">Temp</label>
                 <input type="number" name="hpTemp" placeholder="0">
               </div>
             </div>
           </div>
 
-          <!-- Hit Dice e Death Saves -->
           <div class="dice-death-row">
             <div class="hit-dice-box surface-elevated">
-              <label>Dados de Vida</label>
+              <label data-i18n="lbl_hit_dice">Dados de Vida</label>
               <input type="text" name="hitDiceTotal" placeholder="1d8">
             </div>
             <div class="death-saves-box surface-elevated">
-              <label>Testes contra Morte</label>
+              <label data-i18n="lbl_death_saves">Testes contra Morte</label>
               <div class="death-checks">
                 <div class="death-row">
-                  <span>Sucesso</span>
+                  <span data-i18n="lbl_success">Sucesso</span>
                   <div class="check-group">
                     <input type="checkbox"><input type="checkbox"><input type="checkbox">
                   </div>
                 </div>
                 <div class="death-row">
-                  <span>Falha</span>
+                  <span data-i18n="lbl_fail">Falha</span>
                   <div class="check-group">
                     <input type="checkbox"><input type="checkbox"><input type="checkbox">
                   </div>
@@ -362,18 +373,21 @@
             </div>
           </div>
 
-          <!-- Ataques e Equipamento -->
           <div class="tabs-wrapper">
             <div class="tabs-header">
-              <button type="button" class="tab-button active" onclick="switchTab(event, 'attacks-tab')">Ataques</button>
-              <button type="button" class="tab-button" onclick="switchTab(event, 'equipment-tab')">Equipamento</button>
-              <button type="button" class="tab-button" onclick="switchTab(event, 'features-tab')">Traços</button>
+              <button type="button" class="tab-button active" onclick="switchTab(event, 'attacks-tab')"
+                data-i18n="tab_attacks">Ataques</button>
+              <button type="button" class="tab-button" onclick="switchTab(event, 'equipment-tab')"
+                data-i18n="tab_equip">Equipamento</button>
+              <button type="button" class="tab-button" onclick="switchTab(event, 'features-tab')"
+                data-i18n="tab_traits">Traços</button>
             </div>
 
             <div id="attacks-tab" class="tab-panel active surface-elevated">
-              <label class="tab-label">Ataques e Conjuração</label>
-              <p class="helper-small">Nome | Bônus | Dano/Tipo</p>
-              <textarea name="attacks" rows="8" placeholder="Ex: Espada Longa | +5 | 1d8+3 cortante"></textarea>
+              <label class="tab-label" data-i18n="lbl_attacks_desc">Ataques e Conjuração</label>
+              <p class="helper-small" data-i18n="hlp_attacks">Nome | Bônus | Dano/Tipo</p>
+              <textarea name="attacks" rows="8" data-i18n-placeholder="ph_attacks"
+                placeholder="Ex: Espada Longa | +5 | 1d8+3 cortante"></textarea>
             </div>
 
             <div id="equipment-tab" class="tab-panel surface-elevated">
@@ -384,36 +398,37 @@
                 <div class="coin"><label>PO</label><input type="number" name="gp" placeholder="0"></div>
                 <div class="coin"><label>PL</label><input type="number" name="pp" placeholder="0"></div>
               </div>
-              <label class="tab-label">Equipamento</label>
-              <textarea name="equipment" rows="10" placeholder="Liste seus itens..."></textarea>
+              <label class="tab-label" data-i18n="lbl_equip">Equipamento</label>
+              <textarea name="equipment" rows="10" data-i18n-placeholder="ph_equip"
+                placeholder="Liste seus itens..."></textarea>
             </div>
 
             <div id="features-tab" class="tab-panel surface-elevated">
-              <label class="tab-label">Proficiências e Idiomas</label>
-              <textarea name="proficiencies" rows="4"
+              <label class="tab-label" data-i18n="lbl_prof_lang">Proficiências e Idiomas</label>
+              <textarea name="proficiencies" rows="4" data-i18n-placeholder="ph_prof_lang"
                 placeholder="Armaduras, armas, ferramentas, idiomas..."></textarea>
-              <label class="tab-label">Características e Talentos</label>
-              <textarea name="featuresTraits" rows="10" placeholder="Descreva suas habilidades especiais..."></textarea>
+              <label class="tab-label" data-i18n="lbl_feat_traits">Características e Talentos</label>
+              <textarea name="featuresTraits" rows="10" data-i18n-placeholder="ph_feat_traits"
+                placeholder="Descreva suas habilidades especiais..."></textarea>
             </div>
           </div>
         </main>
 
-        <!-- COLUNA DIREITA: MAGIAS -->
         <aside class="right-sidebar">
           <div class="spells-section surface-elevated">
-            <h3 class="section-title-small">Magias</h3>
+            <h3 class="section-title-small" data-i18n="sec_spells">Magias</h3>
 
             <div class="spell-stats-row">
               <div class="spell-stat-mini">
-                <label>Hab.</label>
+                <label data-i18n="lbl_spell_ability">Hab.</label>
                 <input type="text" name="spellcastingAbility" placeholder="INT">
               </div>
               <div class="spell-stat-mini">
-                <label>CD</label>
+                <label data-i18n="lbl_spell_dc">CD</label>
                 <input type="number" name="spellSaveDC" placeholder="13">
               </div>
               <div class="spell-stat-mini">
-                <label>Atq.</label>
+                <label data-i18n="lbl_spell_atk">Atq.</label>
                 <input type="text" name="spellAttackBonus" placeholder="+5">
               </div>
             </div>
@@ -422,10 +437,10 @@
             </div>
           </div>
 
-          <!-- História -->
           <div class="backstory-section surface-elevated">
-            <h3 class="section-title-small">História do Personagem</h3>
-            <textarea name="backstory" rows="8" placeholder="Conte a história do seu personagem..."></textarea>
+            <h3 class="section-title-small" data-i18n="sec_backstory">História do Personagem</h3>
+            <textarea name="backstory" rows="8" data-i18n-placeholder="ph_backstory"
+              placeholder="Conte a história do seu personagem..."></textarea>
           </div>
         </aside>
       </div>
@@ -433,10 +448,11 @@
   </div>
 
   <footer>
-    <small>Copyright &copy; 2025 created by levirenato.</small>
+    <small data-i18n="footer_text">Copyright &copy; 2025 created by levirenato.</small>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="language.js"></script>
   <script src="script.js"></script>
   <script src="pdf-exporter.js"></script>
 </body>

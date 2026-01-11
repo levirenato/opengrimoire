@@ -75,7 +75,8 @@ function renderList() {
   setCharColor('#b8860b');
 
   if (characters.length === 0) {
-    charList.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; margin-top: 20px;">Nenhum herói encontrado.</p>';
+    const msg = getTranslation('msg_char_not_found');
+    charList.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; margin-top: 20px;">${msg}</p>`;
     return;
   }
 
@@ -200,13 +201,12 @@ function saveCharacter() {
   saveToStorage();
 
   const saveBtn = document.querySelector('.btn-primary');
-  const originalText = saveBtn.innerHTML;
-  saveBtn.innerHTML = '<span class="material-icons-round">check</span> Salvo!';
-  setTimeout(() => { saveBtn.innerHTML = originalText; }, 1500);
+  saveBtn.innerHTML = `<span class="material-icons-round">check</span> ${getTranslation('msg_saved')}`;
+  setTimeout(() => { saveBtn.innerHTML = `<span class="material-icons-round">save</span> ${getTranslation('btn_save')}`; }, 1500);
 }
 
 function deleteCharacter() {
-  if (!confirm("ATENÇÃO: Deseja apagar esta ficha?")) return;
+  if (!confirm(getTranslation('msg_confirm_delete'))) return;
   characters = characters.filter(c => c.id !== currentId);
   saveToStorage();
   closeCharacter();
@@ -229,10 +229,14 @@ function renderSpellSlots(char) {
 
   container.innerHTML = '';
 
+  const txtCantrips = getTranslation('lbl_cantrips');
+  const txtLevel = getTranslation('lbl_level_x');
+  const phList = getTranslation('ph_spells_list');
+
   const cantripsHtml = `
     <div class="spell-level-block">
-      <h4>Truques (0)</h4>
-      <textarea name="spells_cantrips" rows="3" class="lines-bg" placeholder="Um por linha">${char.spells_cantrips || ''}</textarea>
+      <h4>${txtCantrips} (0)</h4>
+      <textarea name="spells_cantrips" rows="3" class="lines-bg" placeholder="${phList}">${char.spells_cantrips || ''}</textarea>
     </div>
   `;
   container.insertAdjacentHTML('beforeend', cantripsHtml);
@@ -251,20 +255,19 @@ function renderSpellSlots(char) {
     const levelHtml = `
       <div class="spell-level-block">
         <div class="spell-level-header">
-          <h4>Nível ${i}</h4>
+          <h4>${txtLevel} ${i}</h4>
           <div class="slots">
             <input type="number" name="slots_lvl${i}_total" value="${total}" class="slot-input" placeholder="0">
             <span>/</span>
             <input type="number" name="slots_lvl${i}_used" value="${used}" class="slot-input" placeholder="0">
           </div>
         </div>
-        <textarea name="spells_lvl${i}" rows="3" class="lines-bg" placeholder="Um por linha">${spells}</textarea>
+        <textarea name="spells_lvl${i}" rows="3" class="lines-bg" placeholder="${phList}">${spells}</textarea>
       </div>
     `;
     container.insertAdjacentHTML('beforeend', levelHtml);
   }
 }
-
 
 function updateModifiers() {
   const attributes = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -311,7 +314,6 @@ function switchTab(event, tabId) {
   event.currentTarget.classList.add('active');
   document.getElementById(tabId).classList.add('active');
 }
-
 
 function exportCharacter() {
   if (!currentId) return;
@@ -389,7 +391,7 @@ function importCharacter(input) {
       let isOverwrite = false;
 
       if (currentId) {
-        if (!confirm("Deseja substituir os dados do personagem atual?")) {
+        if (!confirm(getTranslation('msg_confirm_overwrite'))) {
           input.value = '';
           return;
         }
@@ -426,9 +428,7 @@ function importCharacter(input) {
 
       if (json.spells) {
         newChar.spells_cantrips = Array.isArray(json.spells.cantrips) ? json.spells.cantrips.join('\n') : "";
-
         for (let i = 1; i <= 9; i++) {
-
           const spellList = json.spells[`level_${i}`];
           if (Array.isArray(spellList)) {
             newChar[`spells_lvl${i}`] = spellList.join('\n');
@@ -469,7 +469,7 @@ function importCharacter(input) {
 
       saveToStorage();
       loadCharacter(charId);
-      alert(isOverwrite ? 'Personagem atualizado!' : 'Personagem importado!');
+      alert(isOverwrite ? getTranslation('msg_updated') : getTranslation('msg_imported'));
 
     } catch (error) {
       console.error(error);
@@ -518,4 +518,5 @@ function formatLegacyProficiencies(prof) {
 }
 
 initGlobalTheme();
+initLanguage();
 renderList();
