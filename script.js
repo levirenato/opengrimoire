@@ -1,6 +1,5 @@
 let characters = JSON.parse(localStorage.getItem('dnd_neon_chars')) || [];
 let currentId = null;
-
 let globalTheme = localStorage.getItem('dnd_global_theme') || 'light';
 
 const dashboard = document.getElementById('dashboard');
@@ -46,12 +45,14 @@ function setCharColor(color) {
   if (colorInput) colorInput.value = color;
 
   document.querySelectorAll('.dot').forEach(dot => {
-    dot.style.border = 'none';
+    dot.style.border = '2px solid transparent';
     dot.style.transform = 'scale(1)';
   });
+
   const activeDot = Array.from(document.querySelectorAll('.dot')).find(d => {
     return d.getAttribute('onclick').includes(color);
   });
+
   if (activeDot) {
     activeDot.style.border = '2px solid var(--text-primary)';
     activeDot.style.transform = 'scale(1.2)';
@@ -64,23 +65,25 @@ function adjustColorBrightness(hex, percent) {
     R = (num >> 16) + amt,
     G = (num >> 8 & 0x00FF) + amt,
     B = (num & 0x0000FF) + amt;
-  return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
 }
-
 
 function renderList() {
   charList.innerHTML = '';
-
   setCharColor('#b8860b');
 
   if (characters.length === 0) {
-    charList.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; margin-top: 20px;">Nenhum herói encontrado.</p>';
+    const msg = getTranslation('msg_char_not_found');
+    charList.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; margin-top: 20px;">${msg}</p>`;
     return;
   }
 
   characters.forEach(char => {
     const div = document.createElement('div');
     div.className = 'char-item surface-elevated';
+
     const itemColor = char.theme_color || '#b8860b';
     div.style.borderLeft = `4px solid ${itemColor}`;
 
@@ -94,20 +97,36 @@ function renderList() {
     }
 
     div.innerHTML = `
-            ${portraitHtml}
-            <div class="char-item-info">
-                <strong style="color: ${itemColor}">${name}</strong>
-                <span>${details}</span>
-            </div>
-        `;
+      ${portraitHtml}
+      <div class="char-item-info">
+        <strong style="color: ${itemColor}">${name}</strong>
+        <span>${details}</span>
+      </div>
+    `;
+
     div.onclick = () => loadCharacter(char.id);
     charList.appendChild(div);
   });
 }
 
+function handleLevelChange() {
+  if (!currentId) return;
+
+  const formData = new FormData(charForm);
+  const charIndex = characters.findIndex(c => c.id === currentId);
+
+  if (charIndex !== -1) {
+    formData.forEach((value, key) => {
+      characters[charIndex][key] = value;
+    });
+
+    renderSpellSlots(characters[charIndex]);
+  }
+}
+
 function createNewCharacter() {
   const newId = Date.now().toString();
-  const newChar = { id: newId, theme_color: '#b8860b' }; // Cor padrão
+  const newChar = { id: newId, theme_color: '#b8860b' };
   characters.push(newChar);
   saveToStorage();
   loadCharacter(newId);
@@ -121,6 +140,8 @@ function loadCharacter(id) {
 
   const charTheme = char.theme_color || '#b8860b';
   setCharColor(charTheme);
+
+  renderSpellSlots(char);
 
   Array.from(charForm.elements).forEach(el => {
     if (el.name && char[el.name] !== undefined) {
@@ -146,7 +167,9 @@ function loadCharacter(id) {
 
   updateModifiers();
 
-  document.querySelector('.tab-btn').click();
+  const firstTab = document.querySelector('.tab-button');
+  if (firstTab) firstTab.click();
+
   dashboard.classList.add('hidden');
   sheetEditor.classList.remove('hidden');
   window.scrollTo(0, 0);
@@ -165,23 +188,25 @@ function saveCharacter() {
   });
 
   const currentChar = characters.find(c => c.id === currentId);
-  if (currentChar && currentChar.portrait) updatedData.portrait = currentChar.portrait;
+  if (currentChar && currentChar.portrait) {
+    updatedData.portrait = currentChar.portrait;
+  }
 
   const colorInput = document.getElementById('charColorInput');
   updatedData.theme_color = colorInput.value || '#b8860b';
 
   const index = characters.findIndex(c => c.id === currentId);
   characters[index] = updatedData;
+
   saveToStorage();
 
   const saveBtn = document.querySelector('.btn-primary');
-  const originalText = saveBtn.innerHTML;
-  saveBtn.innerHTML = '<span class="material-icons-round">check</span> Salvo!';
-  setTimeout(() => { saveBtn.innerHTML = originalText; }, 1500);
+  saveBtn.innerHTML = `<span class="material-icons-round">check</span> ${getTranslation('msg_saved')}`;
+  setTimeout(() => { saveBtn.innerHTML = `<span class="material-icons-round">save</span> ${getTranslation('btn_save')}`; }, 1500);
 }
 
 function deleteCharacter() {
-  if (!confirm("ATENÇÃO: Deseja apagar esta ficha?")) return;
+  if (!confirm(getTranslation('msg_confirm_delete'))) return;
   characters = characters.filter(c => c.id !== currentId);
   saveToStorage();
   closeCharacter();
@@ -198,16 +223,60 @@ function saveToStorage() {
   localStorage.setItem('dnd_neon_chars', JSON.stringify(characters));
 }
 
+function renderSpellSlots(char) {
+  const container = document.getElementById('spell-list-container');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const txtCantrips = getTranslation('lbl_cantrips');
+  const txtLevel = getTranslation('lbl_level_x');
+  const phList = getTranslation('ph_spells_list');
+
+  const cantripsHtml = `
+    <div class="spell-level-block">
+      <h4>${txtCantrips} (0)</h4>
+      <textarea name="spells_cantrips" rows="3" class="lines-bg" placeholder="${phList}">${char.spells_cantrips || ''}</textarea>
+    </div>
+  `;
+  container.insertAdjacentHTML('beforeend', cantripsHtml);
+
+  const charLevel = parseInt(char.level) || 1;
+  let maxSpellLevel = Math.ceil(charLevel / 2);
+
+  if (maxSpellLevel < 1) maxSpellLevel = 1;
+  if (maxSpellLevel > 9) maxSpellLevel = 9;
+
+  for (let i = 1; i <= maxSpellLevel; i++) {
+    const total = char[`slots_lvl${i}_total`] || '';
+    const used = char[`slots_lvl${i}_used`] || '';
+    const spells = char[`spells_lvl${i}`] || '';
+
+    const levelHtml = `
+      <div class="spell-level-block">
+        <div class="spell-level-header">
+          <h4>${txtLevel} ${i}</h4>
+          <div class="slots">
+            <input type="number" name="slots_lvl${i}_total" value="${total}" class="slot-input" placeholder="0">
+            <span>/</span>
+            <input type="number" name="slots_lvl${i}_used" value="${used}" class="slot-input" placeholder="0">
+          </div>
+        </div>
+        <textarea name="spells_lvl${i}" rows="3" class="lines-bg" placeholder="${phList}">${spells}</textarea>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', levelHtml);
+  }
+}
+
 function updateModifiers() {
   const attributes = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-
   attributes.forEach(attr => {
     const scoreInput = document.querySelector(`input[name="${attr}_score"]`);
     const modInput = document.querySelector(`input[name="${attr}_mod"]`);
 
     if (scoreInput && modInput) {
       const score = parseInt(scoreInput.value);
-
       if (!isNaN(score)) {
         const mod = Math.floor((score - 10) / 2);
         modInput.value = (mod >= 0 ? '+' : '') + mod;
@@ -221,32 +290,45 @@ function updateModifiers() {
 function handlePortraitUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
   reader.onload = function (e) {
     const portrait = document.getElementById('char-portrait');
     const placeholder = document.getElementById('portrait-placeholder');
+
     portrait.src = e.target.result;
     portrait.classList.remove('hidden');
     placeholder.classList.add('hidden');
+
     const currentChar = characters.find(c => c.id === currentId);
-    if (currentChar) currentChar.portrait = e.target.result;
+    if (currentChar) {
+      currentChar.portrait = e.target.result;
+    }
   };
   reader.readAsDataURL(file);
 }
 
-function openTab(evt, tabName) {
-  const tabContents = document.getElementsByClassName("tab-content");
-  for (let i = 0; i < tabContents.length; i++) tabContents[i].classList.remove("active");
-  const tabLinks = document.getElementsByClassName("tab-btn");
-  for (let i = 0; i < tabLinks.length; i++) tabLinks[i].classList.remove("active");
-  document.getElementById(tabName).classList.add("active");
-  evt.currentTarget.classList.add("active");
+function switchTab(event, tabId) {
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
 }
 
 function exportCharacter() {
   if (!currentId) return;
   const char = characters.find(c => c.id === currentId);
   if (!char) return;
+
+  const spellsExport = {
+    cantrips: char.spells_cantrips ? char.spells_cantrips.split('\n').filter(s => s.trim()) : []
+  };
+  for (let i = 1; i <= 9; i++) {
+    const spells = char[`spells_lvl${i}`];
+    if (spells) {
+      spellsExport[`level_${i}`] = spells.split('\n').filter(s => s.trim());
+    }
+  }
 
   const exportData = {
     personal_data: {
@@ -260,6 +342,7 @@ function exportCharacter() {
       max_hp: parseInt(char.hpMax) || 0,
       armor_class: parseInt(char.ac) || 10,
       speed: char.speed || "",
+      initiative: char.initiative || "+0",
       proficiency_bonus: char.profBonus || "+2"
     },
     theme_color: char.theme_color || "#b8860b",
@@ -275,12 +358,7 @@ function exportCharacter() {
       saving_throws: extractSavingThrows(char),
       skills: extractSkills(char)
     },
-    spells: {
-      cantrips: char.spells_cantrips ? char.spells_cantrips.split('\n') : [],
-      level_1: char.spells_lvl1 ? char.spells_lvl1.split('\n') : [],
-      level_2: char.spells_lvl2 ? char.spells_lvl2.split('\n') : [],
-      level_3: char.spells_lvl3 ? char.spells_lvl3.split('\n') : []
-    },
+    spells: spellsExport,
     text_areas: {
       equipment: char.equipment || "",
       featuresTraits: char.featuresTraits || "",
@@ -309,12 +387,11 @@ function importCharacter(input) {
   reader.onload = function (e) {
     try {
       const json = JSON.parse(e.target.result);
-
       let charId;
       let isOverwrite = false;
 
       if (currentId) {
-        if (!confirm("Deseja substituir os dados do personagem atual pelos dados do arquivo?")) {
+        if (!confirm(getTranslation('msg_confirm_overwrite'))) {
           input.value = '';
           return;
         }
@@ -338,24 +415,25 @@ function importCharacter(input) {
         ac: json.personal_data?.armor_class || 10,
         speed: json.personal_data?.speed || "",
         profBonus: json.personal_data?.proficiency_bonus || "+2",
-
+        initiative: json.personal_data?.initiative || "+0",
         theme_color: json.theme_color || "#b8860b",
-
         str_score: json.attributes?.strength || 10,
         dex_score: json.attributes?.dexterity || 10,
         con_score: json.attributes?.constitution || 10,
         int_score: json.attributes?.intelligence || 10,
         wis_score: json.attributes?.wisdom || 10,
         cha_score: json.attributes?.charisma || 10,
-
         portrait: json.portrait || null
       };
 
       if (json.spells) {
-        newChar.spells_cantrips = (json.spells.cantrips || []).join('\n');
-        newChar.spells_lvl1 = (json.spells.level_1 || []).join('\n');
-        newChar.spells_lvl2 = (json.spells.level_2 || []).join('\n');
-        newChar.spells_lvl3 = (json.spells.level_3 || []).join('\n');
+        newChar.spells_cantrips = Array.isArray(json.spells.cantrips) ? json.spells.cantrips.join('\n') : "";
+        for (let i = 1; i <= 9; i++) {
+          const spellList = json.spells[`level_${i}`];
+          if (Array.isArray(spellList)) {
+            newChar[`spells_lvl${i}`] = spellList.join('\n');
+          }
+        }
       }
 
       if (json.text_areas?.equipment) newChar.equipment = json.text_areas.equipment;
@@ -375,14 +453,7 @@ function importCharacter(input) {
       }
 
       if (json.proficiencies?.skills) {
-        const skillMap = {
-          'Acrobacia': 'skill_acro_prof', 'Adestrar Animais': 'skill_anim_prof', 'Arcanismo': 'skill_arca_prof',
-          'Atletismo': 'skill_athl_prof', 'Enganação': 'skill_decp_prof', 'História': 'skill_hist_prof',
-          'Intuição': 'skill_insg_prof', 'Intimidação': 'skill_inti_prof', 'Investigação': 'skill_invs_prof',
-          'Medicina': 'skill_medi_prof', 'Natureza': 'skill_natu_prof', 'Percepção': 'skill_perc_prof',
-          'Atuação': 'skill_perf_prof', 'Persuasão': 'skill_pers_prof', 'Religião': 'skill_reli_prof',
-          'Prestidigitação': 'skill_slei_prof', 'Furtividade': 'skill_stea_prof', 'Sobrevivência': 'skill_surv_prof'
-        };
+        const skillMap = { 'Acrobacia': 'skill_acro_prof', 'Adestrar Animais': 'skill_anim_prof', 'Arcanismo': 'skill_arca_prof', 'Atletismo': 'skill_athl_prof', 'Enganação': 'skill_decp_prof', 'História': 'skill_hist_prof', 'Intuição': 'skill_insg_prof', 'Intimidação': 'skill_inti_prof', 'Investigação': 'skill_invs_prof', 'Medicina': 'skill_medi_prof', 'Natureza': 'skill_natu_prof', 'Percepção': 'skill_perc_prof', 'Atuação': 'skill_perf_prof', 'Persuasão': 'skill_pers_prof', 'Religião': 'skill_reli_prof', 'Prestidigitação': 'skill_slei_prof', 'Furtividade': 'skill_stea_prof', 'Sobrevivência': 'skill_surv_prof' };
         json.proficiencies.skills.forEach(skill => {
           const cleanSkill = skill.split('(')[0].trim();
           if (skillMap[cleanSkill]) newChar[skillMap[cleanSkill]] = true;
@@ -391,20 +462,14 @@ function importCharacter(input) {
 
       if (isOverwrite) {
         const index = characters.findIndex(c => c.id === charId);
-        if (index !== -1) {
-          characters[index] = newChar;
-        } else {
-          characters.push(newChar);
-        }
+        if (index !== -1) characters[index] = newChar; else characters.push(newChar);
       } else {
         characters.push(newChar);
       }
 
       saveToStorage();
       loadCharacter(charId);
-
-      const msg = isOverwrite ? 'Personagem atualizado!' : 'Personagem importado!';
-      alert(msg);
+      alert(isOverwrite ? getTranslation('msg_updated') : getTranslation('msg_imported'));
 
     } catch (error) {
       console.error(error);
@@ -421,19 +486,14 @@ function extractSavingThrows(char) {
   for (let k in map) { if (char[k]) saves.push(map[k]); }
   return saves;
 }
+
 function extractSkills(char) {
   const skills = [];
-  const map = {
-    skill_acro_prof: 'Acrobacia', skill_anim_prof: 'Adestrar Animais', skill_arca_prof: 'Arcanismo',
-    skill_athl_prof: 'Atletismo', skill_decp_prof: 'Enganação', skill_hist_prof: 'História',
-    skill_insg_prof: 'Intuição', skill_inti_prof: 'Intimidação', skill_invs_prof: 'Investigação',
-    skill_medi_prof: 'Medicina', skill_natu_prof: 'Natureza', skill_perc_prof: 'Percepção',
-    skill_perf_prof: 'Atuação', skill_pers_prof: 'Persuasão', skill_reli_prof: 'Religião',
-    skill_slei_prof: 'Prestidigitação', skill_stea_prof: 'Furtividade', skill_surv_prof: 'Sobrevivência'
-  };
+  const map = { skill_acro_prof: 'Acrobacia', skill_anim_prof: 'Adestrar Animais', skill_arca_prof: 'Arcanismo', skill_athl_prof: 'Atletismo', skill_decp_prof: 'Enganação', skill_hist_prof: 'História', skill_insg_prof: 'Intuição', skill_inti_prof: 'Intimidação', skill_invs_prof: 'Investigação', skill_medi_prof: 'Medicina', skill_natu_prof: 'Natureza', skill_perc_prof: 'Percepção', skill_perf_prof: 'Atuação', skill_pers_prof: 'Persuasão', skill_reli_prof: 'Religião', skill_slei_prof: 'Prestidigitação', skill_stea_prof: 'Furtividade', skill_surv_prof: 'Sobrevivência' };
   for (let k in map) { if (char[k]) skills.push(map[k]); }
   return skills;
 }
+
 function formatComplexTraits(data) {
   if (!data) return "";
   let text = "";
@@ -447,6 +507,7 @@ function formatComplexTraits(data) {
   }
   return text;
 }
+
 function formatLegacyProficiencies(prof) {
   let t = "";
   if (prof.armaduras) t += "Armaduras: " + prof.armaduras.join(', ') + "\n";
@@ -457,4 +518,5 @@ function formatLegacyProficiencies(prof) {
 }
 
 initGlobalTheme();
+initLanguage();
 renderList();
