@@ -991,8 +991,8 @@ input[type="number"] {
   }
 
   .attributes-list {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .skills-scroll {
