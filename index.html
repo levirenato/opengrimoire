@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D&D 5e Character Sheet</title>
+  <title>OpenGrimoire - d&d charecter sheet</title>
+  <link rel="icon" type="image/x-icon" href="./assets/favicon_io/favicon.ico">
   <link
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Merriweather:wght@300;400;700&display=swap"
     rel="stylesheet">
@@ -20,7 +21,8 @@
   <!-- DASHBOARD -->
   <div id="dashboard" class="main-container">
     <header class="app-header">
-      <h1 class="title-fantasy">Grimório de Lendas</h1>
+      <img src="./assets/favicon_io/android-chrome-192x192.png" />
+      <h1 class="title-fantasy">OpenGrimoire</h1>
       <p class="subtitle">Gerencie seus heróis e suas histórias</p>
       <button class="theme-toggle-btn" onclick="toggleGlobalTheme()" title="Alternar Tema Claro/Escuro">
         <span class="material-icons-round" id="theme-icon-home">light_mode</span>
@@ -102,7 +104,7 @@
               </div>
               <div class="meta-field">
                 <label>Nível</label>
-                <input type="number" name="level" placeholder="1" class="input-small">
+                <input type="number" name="level" placeholder="1" class="input-small" oninput="handleLevelChange()">
               </div>
               <div class="meta-field">
                 <label>Raça</label>
@@ -416,45 +418,7 @@
               </div>
             </div>
 
-            <div class="spell-level-block">
-              <h4>Truques</h4>
-              <textarea name="spells_cantrips" rows="3" placeholder="Um por linha"></textarea>
-            </div>
-
-            <div class="spell-level-block">
-              <div class="spell-level-header">
-                <h4>Nível 1</h4>
-                <div class="slots">
-                  <input type="number" name="slots_lvl1_total" placeholder="0" class="slot-input">
-                  <span>/</span>
-                  <input type="number" name="slots_lvl1_used" placeholder="0" class="slot-input">
-                </div>
-              </div>
-              <textarea name="spells_lvl1" rows="3" placeholder="Um por linha"></textarea>
-            </div>
-
-            <div class="spell-level-block">
-              <div class="spell-level-header">
-                <h4>Nível 2</h4>
-                <div class="slots">
-                  <input type="number" name="slots_lvl2_total" placeholder="0" class="slot-input">
-                  <span>/</span>
-                  <input type="number" name="slots_lvl2_used" placeholder="0" class="slot-input">
-                </div>
-              </div>
-              <textarea name="spells_lvl2" rows="3" placeholder="Um por linha"></textarea>
-            </div>
-
-            <div class="spell-level-block">
-              <div class="spell-level-header">
-                <h4>Nível 3</h4>
-                <div class="slots">
-                  <input type="number" name="slots_lvl3_total" placeholder="0" class="slot-input">
-                  <span>/</span>
-                  <input type="number" name="slots_lvl3_used" placeholder="0" class="slot-input">
-                </div>
-              </div>
-              <textarea name="spells_lvl3" rows="3" placeholder="Um por linha"></textarea>
+            <div class="spell-list" id="spell-list-container">
             </div>
           </div>
 
