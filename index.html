@@ -24,7 +24,7 @@
       <h1 class="title-fantasy">OpenGrimoire</h1>
       <p class="subtitle" data-i18n="subtitle">Gerencie seus heróis e suas histórias</p>
       <div class="header-controls">
-        <select id="lang-selector" class="lang-select" onchange="changeLanguage(this.value)">
+        <select class="lang-select" onchange="changeLanguage(this.value)">
           <option value="pt-BR">🇧🇷 PT</option>
           <option value="en-US">🇺🇸 EN</option>
         </select>
@@ -45,7 +45,7 @@
         <button class="btn-icon" onclick="closeCharacter()">
           <span class="material-icons-round">arrow_back</span> <span data-i18n="btn_back">Voltar</span>
         </button>
-        <select id="lang-selector" class="lang-select" onchange="changeLanguage(this.value)">
+        <select class="lang-select" onchange="changeLanguage(this.value)">
           <option value="pt-BR">🇧🇷 PT</option>
           <option value="en-US">🇺🇸 EN</option>
         </select>
@@ -93,14 +93,14 @@
               <div class="char-color-picker-inline">
                 <input type="hidden" name="charColor" id="charColorInput">
                 <div class="color-dots-inline">
-                  <span class="dot" style="background:#b8860b" onclick="setCharColor('#b8860b')"></span>
-                  <span class="dot" style="background:#E7623E" onclick="setCharColor('#E7623E')"></span>
-                  <span class="dot" style="background:#AB6DAC" onclick="setCharColor('#AB6DAC')"></span>
-                  <span class="dot" style="background:#91A1B2" onclick="setCharColor('#91A1B2')"></span>
-                  <span class="dot" style="background:#7A853B" onclick="setCharColor('#7A853B')"></span>
-                  <span class="dot" style="background:#7F513E" onclick="setCharColor('#7F513E')"></span>
-                  <span class="dot" style="background:#51A5C5" onclick="setCharColor('#51A5C5')"></span>
-                  <span class="dot" style="background:#B59E54" onclick="setCharColor('#B59E54')"></span>
+                  <span class="dot" style="background:#b8860b" data-color="#b8860b" onclick="setCharColor('#b8860b')"></span>
+                  <span class="dot" style="background:#E7623E" data-color="#E7623E" onclick="setCharColor('#E7623E')"></span>
+                  <span class="dot" style="background:#AB6DAC" data-color="#AB6DAC" onclick="setCharColor('#AB6DAC')"></span>
+                  <span class="dot" style="background:#91A1B2" data-color="#91A1B2" onclick="setCharColor('#91A1B2')"></span>
+                  <span class="dot" style="background:#7A853B" data-color="#7A853B" onclick="setCharColor('#7A853B')"></span>
+                  <span class="dot" style="background:#7F513E" data-color="#7F513E" onclick="setCharColor('#7F513E')"></span>
+                  <span class="dot" style="background:#51A5C5" data-color="#51A5C5" onclick="setCharColor('#51A5C5')"></span>
+                  <span class="dot" style="background:#B59E54" data-color="#B59E54" onclick="setCharColor('#B59E54')"></span>
                 </div>
               </div>
             </div>
@@ -364,13 +364,13 @@
                 <div class="death-row">
                   <span data-i18n="lbl_success">Sucesso</span>
                   <div class="check-group">
-                    <input type="checkbox"><input type="checkbox"><input type="checkbox">
+                    <input type="checkbox" name="death_save_success_1"><input type="checkbox" name="death_save_success_2"><input type="checkbox" name="death_save_success_3">
                   </div>
                 </div>
                 <div class="death-row">
                   <span data-i18n="lbl_fail">Falha</span>
                   <div class="check-group">
-                    <input type="checkbox"><input type="checkbox"><input type="checkbox">
+                    <input type="checkbox" name="death_save_fail_1"><input type="checkbox" name="death_save_fail_2"><input type="checkbox" name="death_save_fail_3">
                   </div>
                 </div>
               </div>
@@ -396,11 +396,11 @@
 
             <div id="equipment-tab" class="tab-panel surface-elevated">
               <div class="coins-row">
-                <div class="coin"><label>PC</label><input type="number" name="cp" placeholder="0"></div>
-                <div class="coin"><label>PP</label><input type="number" name="sp" placeholder="0"></div>
-                <div class="coin"><label>PE</label><input type="number" name="ep" placeholder="0"></div>
-                <div class="coin"><label>PO</label><input type="number" name="gp" placeholder="0"></div>
-                <div class="coin"><label>PL</label><input type="number" name="pp" placeholder="0"></div>
+                <div class="coin"><label data-i18n="coin_cp">PC</label><input type="number" name="cp" placeholder="0"></div>
+                <div class="coin"><label data-i18n="coin_sp">PP</label><input type="number" name="sp" placeholder="0"></div>
+                <div class="coin"><label data-i18n="coin_ep">PE</label><input type="number" name="ep" placeholder="0"></div>
+                <div class="coin"><label data-i18n="coin_gp">PO</label><input type="number" name="gp" placeholder="0"></div>
+                <div class="coin"><label data-i18n="coin_pp">PL</label><input type="number" name="pp" placeholder="0"></div>
               </div>
               <label class="tab-label" data-i18n="lbl_equip">Equipamento</label>
               <textarea name="equipment" rows="10" data-i18n-placeholder="ph_equip"
@@ -454,6 +454,20 @@
   <footer>
     <small data-i18n="footer_text">Copyright &copy; 2025 created by levirenato.</small>
   </footer>
+
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="material-icons-round modal-icon" id="modal-icon">auto_stories</span>
+        <h3 id="modal-title" class="modal-title"></h3>
+      </div>
+      <p id="modal-message" class="modal-message"></p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn-secondary modal-btn hidden" onclick="resolveModal(false)"></button>
+        <button id="modal-ok" class="btn-primary modal-btn" onclick="resolveModal(true)">OK</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <script src="language.js"></script>

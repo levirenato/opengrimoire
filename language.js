@@ -86,7 +86,32 @@ const translations = {
     msg_confirm_overwrite: "Deseja substituir os dados do personagem atual?",
     msg_imported: "Personagem importado!",
     msg_updated: "Personagem atualizado!",
-    msg_char_not_found: "Nenhum herói encontrado."
+    msg_char_not_found: "Nenhum herói encontrado.",
+
+    modal_title_info: "Aviso",
+    modal_title_confirm: "Confirmação",
+    modal_title_success: "Sucesso",
+    modal_title_error: "Erro",
+    modal_confirm: "Confirmar",
+    modal_cancel: "Cancelar",
+
+    msg_no_char_loaded: "Nenhum personagem carregado!",
+    msg_char_data_error: "Erro ao encontrar dados do personagem.",
+    msg_pdf_success: "PDF exportado com sucesso!",
+    msg_pdf_generating: "Gerando...",
+    msg_json_error: "Erro ao processar o arquivo JSON.",
+    msg_unsaved_changes: "Você tem alterações não salvas. Deseja sair sem salvar?",
+    msg_player: "Jogador",
+
+    coin_cp: "PC",
+    coin_sp: "PP",
+    coin_ep: "PE",
+    coin_gp: "PO",
+    coin_pp: "PL",
+
+    lbl_unknown: "Desconhecido",
+    lbl_default_race: "Raça",
+    lbl_default_class: "Classe"
   },
   'en-US': {
     subtitle: "Manage your heroes and their stories",
@@ -175,21 +200,46 @@ const translations = {
     msg_confirm_overwrite: "Do you want to overwrite current character data?",
     msg_imported: "Character imported!",
     msg_updated: "Character updated!",
-    msg_char_not_found: "No heroes found."
+    msg_char_not_found: "No heroes found.",
+
+    modal_title_info: "Notice",
+    modal_title_confirm: "Confirmation",
+    modal_title_success: "Success",
+    modal_title_error: "Error",
+    modal_confirm: "Confirm",
+    modal_cancel: "Cancel",
+
+    msg_no_char_loaded: "No character loaded!",
+    msg_char_data_error: "Error finding character data.",
+    msg_pdf_success: "PDF exported successfully!",
+    msg_pdf_generating: "Generating...",
+    msg_json_error: "Error processing JSON file.",
+    msg_unsaved_changes: "You have unsaved changes. Leave without saving?",
+    msg_player: "Player",
+
+    coin_cp: "CP",
+    coin_sp: "SP",
+    coin_ep: "EP",
+    coin_gp: "GP",
+    coin_pp: "PP",
+
+    lbl_unknown: "Unknown",
+    lbl_default_race: "Race",
+    lbl_default_class: "Class"
   }
 };
 
 let currentLang = localStorage.getItem('dnd_lang') || 'pt-BR';
 
 function initLanguage() {
-  const selector = document.getElementById('lang-selector');
-  if (selector) selector.value = currentLang;
+  document.querySelectorAll('.lang-select').forEach(sel => sel.value = currentLang);
   applyLanguage(currentLang);
 }
 
 function changeLanguage(lang) {
   currentLang = lang;
   localStorage.setItem('dnd_lang', lang);
+  document.querySelectorAll('.lang-select').forEach(sel => sel.value = lang);
   applyLanguage(lang);
 
   if (typeof currentId !== 'undefined' && currentId && typeof characters !== 'undefined') {

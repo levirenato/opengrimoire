@@ -1,19 +1,22 @@
 async function exportToPDF() {
   if (!currentId) {
-    alert('Nenhum personagem carregado!');
+    await showAlert(getTranslation('msg_no_char_loaded'), { title: getTranslation('modal_title_error'), icon: 'error', iconClass: 'modal-icon-error' });
     return;
   }
 
+  // Save current form state before exporting
+  saveCharacter();
+
   const char = characters.find(c => c.id === currentId);
   if (!char) {
-    alert('Erro ao encontrar dados do personagem.');
+    await showAlert(getTranslation('msg_char_data_error'), { title: getTranslation('modal_title_error'), icon: 'error', iconClass: 'modal-icon-error' });
     return;
   }
 
   try {
     const exportBtn = document.querySelector('.btn-secondary:nth-child(1)');
     const originalHTML = exportBtn.innerHTML;
-    exportBtn.innerHTML = '<span class="material-icons-round">hourglass_empty</span> Gerando...';
+    exportBtn.innerHTML = `<span class="material-icons-round">hourglass_empty</span> ${getTranslation('msg_pdf_generating')}`;
     exportBtn.disabled = true;
 
     const { PDFDocument, StandardFonts } = window.PDFLib;
@@ -57,7 +60,7 @@ async function exportToPDF() {
     fill('Background', char.background, 10);
     fill('Race ', char.species, 10);
     fill('Alignment', char.alignment, 10);
-    fill('PlayerName', 'Jogador', 10);
+    fill('PlayerName', getTranslation('msg_player'), 10);
     fill('XP', '', 10);
 
     fill('STR', char.str_score, 14); fill('STRmod', char.str_mod, 18);
@@ -153,6 +156,34 @@ async function exportToPDF() {
     const lvl3 = (char.spells_lvl3 || '').split('\n').filter(s => s.trim());
     for (let i = 0; i < Math.min(lvl3.length, 13); i++) fill(`Spells 10${47 + i}`, lvl3[i], 9);
 
+    fill('SlotsTotal 22', char.slots_lvl4_total, 10); fill('SlotsRemaining 22', char.slots_lvl4_used, 10);
+    const lvl4 = (char.spells_lvl4 || '').split('\n').filter(s => s.trim());
+    for (let i = 0; i < Math.min(lvl4.length, 13); i++) fill(`Spells 10${60 + i}`, lvl4[i], 9);
+
+    fill('SlotsTotal 23', char.slots_lvl5_total, 10); fill('SlotsRemaining 23', char.slots_lvl5_used, 10);
+    const lvl5 = (char.spells_lvl5 || '').split('\n').filter(s => s.trim());
+    for (let i = 0; i < Math.min(lvl5.length, 9); i++) fill(`Spells 10${73 + i}`, lvl5[i], 9);
+
+    fill('SlotsTotal 24', char.slots_lvl6_total, 10); fill('SlotsRemaining 24', char.slots_lvl6_used, 10);
+    const lvl6 = (char.spells_lvl6 || '').split('\n').filter(s => s.trim());
+    for (let i = 0; i < Math.min(lvl6.length, 9); i++) fill(`Spells 10${82 + i}`, lvl6[i], 9);
+
+    fill('SlotsTotal 25', char.slots_lvl7_total, 10); fill('SlotsRemaining 25', char.slots_lvl7_used, 10);
+    const lvl7 = (char.spells_lvl7 || '').split('\n').filter(s => s.trim());
+    for (let i = 0; i < Math.min(lvl7.length, 9); i++) fill(`Spells 10${91 + i}`, lvl7[i], 9);
+
+    fill('SlotsTotal 26', char.slots_lvl8_total, 10); fill('SlotsRemaining 26', char.slots_lvl8_used, 10);
+    const lvl8 = (char.spells_lvl8 || '').split('\n').filter(s => s.trim());
+    for (let i = 0; i < Math.min(lvl8.length, 7); i++) fill(`Spells 10${100 + i}`, lvl8[i], 9);
+
+    fill('SlotsTotal 27', char.slots_lvl9_total, 10); fill('SlotsRemaining 27', char.slots_lvl9_used, 10);
+    const lvl9 = (char.spells_lvl9 || '').split('\n').filter(s => s.trim());
+    for (let i = 0; i < Math.min(lvl9.length, 7); i++) fill(`Spells 10${107 + i}`, lvl9[i], 9);
+
+    // Death saves
+    check('Check Box 12', char.death_save_success_1); check('Check Box 13', char.death_save_success_2); check('Check Box 14', char.death_save_success_3);
+    check('Check Box 15', char.death_save_fail_1); check('Check Box 16', char.death_save_fail_2); check('Check Box 17', char.death_save_fail_3);
+
     form.flatten();
 
     const pdfBytes = await pdfDoc.save();
@@ -166,11 +197,11 @@ async function exportToPDF() {
 
     exportBtn.innerHTML = originalHTML;
     exportBtn.disabled = false;
-    alert('PDF exportado com sucesso!');
+    await showAlert(getTranslation('msg_pdf_success'), { title: getTranslation('modal_title_success'), icon: 'military_tech', iconClass: 'modal-icon-success' });
 
   } catch (error) {
     console.error(error);
-    alert('Erro: ' + error.message);
+    await showAlert(error.message, { title: getTranslation('modal_title_error'), icon: 'error', iconClass: 'modal-icon-error' });
     const exportBtn = document.querySelector('.btn-secondary:nth-child(1)');
     exportBtn.disabled = false;
     exportBtn.innerHTML = '<span class="material-icons-round">picture_as_pdf</span> PDF';

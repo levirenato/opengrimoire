@@ -1,11 +1,57 @@
 let characters = JSON.parse(localStorage.getItem('dnd_neon_chars')) || [];
 let currentId = null;
 let globalTheme = localStorage.getItem('dnd_global_theme') || 'light';
+let isDirty = false;
 
 const dashboard = document.getElementById('dashboard');
 const sheetEditor = document.getElementById('sheet-editor');
 const charList = document.getElementById('character-list');
 const charForm = document.getElementById('char-form');
+
+// ===== MODAL SYSTEM =====
+
+let modalResolve = null;
+
+function showAlert(message, { title, icon, iconClass } = {}) {
+  return new Promise(resolve => {
+    modalResolve = resolve;
+    document.getElementById('modal-title').textContent = title || getTranslation('modal_title_info');
+    document.getElementById('modal-message').textContent = message;
+    document.getElementById('modal-cancel').classList.add('hidden');
+    document.getElementById('modal-ok').textContent = 'OK';
+    const iconEl = document.getElementById('modal-icon');
+    iconEl.textContent = icon || 'auto_stories';
+    iconEl.className = 'material-icons-round modal-icon ' + (iconClass || '');
+    document.getElementById('modal-overlay').classList.remove('hidden');
+  });
+}
+
+function showConfirm(message, title) {
+  return new Promise(resolve => {
+    modalResolve = resolve;
+    document.getElementById('modal-title').textContent = title || getTranslation('modal_title_confirm');
+    document.getElementById('modal-message').textContent = message;
+    const cancelBtn = document.getElementById('modal-cancel');
+    cancelBtn.classList.remove('hidden');
+    cancelBtn.textContent = getTranslation('modal_cancel');
+    document.getElementById('modal-ok').textContent = getTranslation('modal_confirm');
+    const iconEl = document.getElementById('modal-icon');
+    iconEl.textContent = 'help_outline';
+    iconEl.className = 'material-icons-round modal-icon modal-icon-warning';
+    document.getElementById('modal-overlay').classList.remove('hidden');
+  });
+}
+
+function resolveModal(value) {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  if (modalResolve) {
+    const fn = modalResolve;
+    modalResolve = null;
+    fn(value);
+  }
+}
+
+// ===== THEME =====
 
 function initGlobalTheme() {
   if (globalTheme === 'dark') {
@@ -49,10 +95,7 @@ function setCharColor(color) {
     dot.style.transform = 'scale(1)';
   });
 
-  const activeDot = Array.from(document.querySelectorAll('.dot')).find(d => {
-    return d.getAttribute('onclick').includes(color);
-  });
-
+  const activeDot = document.querySelector(`.dot[data-color="${color}"]`);
   if (activeDot) {
     activeDot.style.border = '2px solid var(--text-primary)';
     activeDot.style.transform = 'scale(1.2)';
@@ -70,13 +113,16 @@ function adjustColorBrightness(hex, percent) {
     (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
 }
 
+// ===== DASHBOARD =====
+
 function renderList() {
   charList.innerHTML = '';
   setCharColor('#b8860b');
 
   if (characters.length === 0) {
     const msg = getTranslation('msg_char_not_found');
-    charList.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; margin-top: 20px;">${msg}</p>`;
+    charList.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center; margin-top: 20px;"></p>`;
+    charList.querySelector('p').textContent = msg;
     return;
   }
 
@@ -87,41 +133,59 @@ function renderList() {
     const itemColor = char.theme_color || '#b8860b';
     div.style.borderLeft = `4px solid ${itemColor}`;
 
-    const name = char.charName || 'Desconhecido';
-    const details = `${char.species || 'Raça'} - ${char.charClass || 'Classe'} ${char.level || '1'}`;
+    const name = char.charName || getTranslation('lbl_unknown');
+    const race = char.species || getTranslation('lbl_default_race');
+    const cls = char.charClass || getTranslation('lbl_default_class');
+    const details = `${race} - ${cls} ${char.level || '1'}`;
 
-    let portraitHtml = `<div class="char-item-portrait" style="background-color: var(--surface-subtle); display:flex; align-items:center; justify-content:center;"><span class="material-icons-round" style="font-size:36px; color:var(--text-disabled);">person</span></div>`;
+    const portraitDiv = document.createElement('div');
+    portraitDiv.className = 'char-item-portrait';
 
     if (char.portrait) {
-      portraitHtml = `<div class="char-item-portrait"><img src="${char.portrait}" alt="${name}"></div>`;
+      const img = document.createElement('img');
+      img.src = char.portrait;
+      img.alt = name;
+      portraitDiv.appendChild(img);
+    } else {
+      portraitDiv.style.cssText = 'background-color: var(--surface-subtle); display:flex; align-items:center; justify-content:center;';
+      const icon = document.createElement('span');
+      icon.className = 'material-icons-round';
+      icon.style.cssText = 'font-size:36px; color:var(--text-disabled);';
+      icon.textContent = 'person';
+      portraitDiv.appendChild(icon);
     }
 
-    div.innerHTML = `
-      ${portraitHtml}
-      <div class="char-item-info">
-        <strong style="color: ${itemColor}">${name}</strong>
-        <span>${details}</span>
-      </div>
-    `;
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'char-item-info';
+    const strong = document.createElement('strong');
+    strong.style.color = itemColor;
+    strong.textContent = name;
+    const span = document.createElement('span');
+    span.textContent = details;
+    infoDiv.appendChild(strong);
+    infoDiv.appendChild(span);
+
+    div.appendChild(portraitDiv);
+    div.appendChild(infoDiv);
 
     div.onclick = () => loadCharacter(char.id);
     charList.appendChild(div);
   });
 }
 
+// ===== CHARACTER CRUD =====
+
 function handleLevelChange() {
   if (!currentId) return;
 
-  const formData = new FormData(charForm);
   const charIndex = characters.findIndex(c => c.id === currentId);
+  if (charIndex === -1) return;
 
-  if (charIndex !== -1) {
-    formData.forEach((value, key) => {
-      characters[charIndex][key] = value;
-    });
+  const levelInput = charForm.querySelector('input[name="level"]');
+  const newLevel = levelInput ? levelInput.value : '1';
+  characters[charIndex].level = newLevel;
 
-    renderSpellSlots(characters[charIndex]);
-  }
+  renderSpellSlots(characters[charIndex]);
 }
 
 function createNewCharacter() {
@@ -173,47 +237,89 @@ function loadCharacter(id) {
   dashboard.classList.add('hidden');
   sheetEditor.classList.remove('hidden');
   window.scrollTo(0, 0);
+
+  isDirty = false;
+  charForm.addEventListener('input', markDirty);
+  charForm.addEventListener('change', markDirty);
+}
+
+function markDirty() {
+  isDirty = true;
+}
+
+function collectFormData() {
+  const formData = new FormData(charForm);
+  const data = { id: currentId };
+
+  formData.forEach((value, key) => data[key] = value);
+
+  Array.from(charForm.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
+    if (checkbox.name) data[checkbox.name] = checkbox.checked;
+  });
+
+  const currentChar = characters.find(c => c.id === currentId);
+  if (currentChar && currentChar.portrait) {
+    data.portrait = currentChar.portrait;
+  }
+
+  const colorInput = document.getElementById('charColorInput');
+  data.theme_color = colorInput.value || '#b8860b';
+
+  // Preserve spell data for levels not currently rendered
+  if (currentChar) {
+    for (let i = 1; i <= 9; i++) {
+      const spellKey = `spells_lvl${i}`;
+      const totalKey = `slots_lvl${i}_total`;
+      const usedKey = `slots_lvl${i}_used`;
+      if (data[spellKey] === undefined && currentChar[spellKey]) {
+        data[spellKey] = currentChar[spellKey];
+      }
+      if (data[totalKey] === undefined && currentChar[totalKey]) {
+        data[totalKey] = currentChar[totalKey];
+      }
+      if (data[usedKey] === undefined && currentChar[usedKey]) {
+        data[usedKey] = currentChar[usedKey];
+      }
+    }
+  }
+
+  return data;
 }
 
 function saveCharacter() {
   if (!currentId) return;
 
-  const formData = new FormData(charForm);
-  const updatedData = { id: currentId };
-
-  formData.forEach((value, key) => updatedData[key] = value);
-
-  Array.from(charForm.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
-    updatedData[checkbox.name] = checkbox.checked;
-  });
-
-  const currentChar = characters.find(c => c.id === currentId);
-  if (currentChar && currentChar.portrait) {
-    updatedData.portrait = currentChar.portrait;
-  }
-
-  const colorInput = document.getElementById('charColorInput');
-  updatedData.theme_color = colorInput.value || '#b8860b';
+  const updatedData = collectFormData();
 
   const index = characters.findIndex(c => c.id === currentId);
   characters[index] = updatedData;
 
   saveToStorage();
+  isDirty = false;
 
   const saveBtn = document.querySelector('.btn-primary');
   saveBtn.innerHTML = `<span class="material-icons-round">check</span> ${getTranslation('msg_saved')}`;
   setTimeout(() => { saveBtn.innerHTML = `<span class="material-icons-round">save</span> ${getTranslation('btn_save')}`; }, 1500);
 }
 
-function deleteCharacter() {
-  if (!confirm(getTranslation('msg_confirm_delete'))) return;
+async function deleteCharacter() {
+  const confirmed = await showConfirm(getTranslation('msg_confirm_delete'));
+  if (!confirmed) return;
   characters = characters.filter(c => c.id !== currentId);
   saveToStorage();
+  isDirty = false;
   closeCharacter();
 }
 
-function closeCharacter() {
+async function closeCharacter() {
+  if (isDirty) {
+    const confirmed = await showConfirm(getTranslation('msg_unsaved_changes'));
+    if (!confirmed) return;
+  }
   currentId = null;
+  isDirty = false;
+  charForm.removeEventListener('input', markDirty);
+  charForm.removeEventListener('change', markDirty);
   sheetEditor.classList.add('hidden');
   dashboard.classList.remove('hidden');
   renderList();
@@ -222,6 +328,8 @@ function closeCharacter() {
 function saveToStorage() {
   localStorage.setItem('dnd_neon_chars', JSON.stringify(characters));
 }
+
+// ===== SPELLS =====
 
 function renderSpellSlots(char) {
   const container = document.getElementById('spell-list-container');
@@ -233,13 +341,19 @@ function renderSpellSlots(char) {
   const txtLevel = getTranslation('lbl_level_x');
   const phList = getTranslation('ph_spells_list');
 
-  const cantripsHtml = `
-    <div class="spell-level-block">
-      <h4>${txtCantrips} (0)</h4>
-      <textarea name="spells_cantrips" rows="3" class="lines-bg" placeholder="${phList}">${char.spells_cantrips || ''}</textarea>
-    </div>
-  `;
-  container.insertAdjacentHTML('beforeend', cantripsHtml);
+  const cantripsBlock = document.createElement('div');
+  cantripsBlock.className = 'spell-level-block';
+  const cantripsTitle = document.createElement('h4');
+  cantripsTitle.textContent = `${txtCantrips} (0)`;
+  const cantripsTextarea = document.createElement('textarea');
+  cantripsTextarea.name = 'spells_cantrips';
+  cantripsTextarea.rows = 3;
+  cantripsTextarea.className = 'lines-bg';
+  cantripsTextarea.placeholder = phList;
+  cantripsTextarea.value = char.spells_cantrips || '';
+  cantripsBlock.appendChild(cantripsTitle);
+  cantripsBlock.appendChild(cantripsTextarea);
+  container.appendChild(cantripsBlock);
 
   const charLevel = parseInt(char.level) || 1;
   let maxSpellLevel = Math.ceil(charLevel / 2);
@@ -252,22 +366,56 @@ function renderSpellSlots(char) {
     const used = char[`slots_lvl${i}_used`] || '';
     const spells = char[`spells_lvl${i}`] || '';
 
-    const levelHtml = `
-      <div class="spell-level-block">
-        <div class="spell-level-header">
-          <h4>${txtLevel} ${i}</h4>
-          <div class="slots">
-            <input type="number" name="slots_lvl${i}_total" value="${total}" class="slot-input" placeholder="0">
-            <span>/</span>
-            <input type="number" name="slots_lvl${i}_used" value="${used}" class="slot-input" placeholder="0">
-          </div>
-        </div>
-        <textarea name="spells_lvl${i}" rows="3" class="lines-bg" placeholder="${phList}">${spells}</textarea>
-      </div>
-    `;
-    container.insertAdjacentHTML('beforeend', levelHtml);
+    const block = document.createElement('div');
+    block.className = 'spell-level-block';
+
+    const header = document.createElement('div');
+    header.className = 'spell-level-header';
+
+    const title = document.createElement('h4');
+    title.textContent = `${txtLevel} ${i}`;
+
+    const slotsDiv = document.createElement('div');
+    slotsDiv.className = 'slots';
+
+    const totalInput = document.createElement('input');
+    totalInput.type = 'number';
+    totalInput.name = `slots_lvl${i}_total`;
+    totalInput.value = total;
+    totalInput.className = 'slot-input';
+    totalInput.placeholder = '0';
+
+    const separator = document.createElement('span');
+    separator.textContent = '/';
+
+    const usedInput = document.createElement('input');
+    usedInput.type = 'number';
+    usedInput.name = `slots_lvl${i}_used`;
+    usedInput.value = used;
+    usedInput.className = 'slot-input';
+    usedInput.placeholder = '0';
+
+    slotsDiv.appendChild(totalInput);
+    slotsDiv.appendChild(separator);
+    slotsDiv.appendChild(usedInput);
+
+    header.appendChild(title);
+    header.appendChild(slotsDiv);
+
+    const textarea = document.createElement('textarea');
+    textarea.name = `spells_lvl${i}`;
+    textarea.rows = 3;
+    textarea.className = 'lines-bg';
+    textarea.placeholder = phList;
+    textarea.value = spells;
+
+    block.appendChild(header);
+    block.appendChild(textarea);
+    container.appendChild(block);
   }
 }
+
+// ===== MODIFIERS =====
 
 function updateModifiers() {
   const attributes = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -287,6 +435,8 @@ function updateModifiers() {
   });
 }
 
+// ===== PORTRAIT =====
+
 function handlePortraitUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -304,9 +454,12 @@ function handlePortraitUpload(event) {
     if (currentChar) {
       currentChar.portrait = e.target.result;
     }
+    isDirty = true;
   };
   reader.readAsDataURL(file);
 }
+
+// ===== TABS =====
 
 function switchTab(event, tabId) {
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -315,8 +468,14 @@ function switchTab(event, tabId) {
   document.getElementById(tabId).classList.add('active');
 }
 
+// ===== EXPORT JSON =====
+
 function exportCharacter() {
   if (!currentId) return;
+
+  // Save current form state before exporting
+  saveCharacter();
+
   const char = characters.find(c => c.id === currentId);
   if (!char) return;
 
@@ -330,6 +489,15 @@ function exportCharacter() {
     }
   }
 
+  const spellSlots = {};
+  for (let i = 1; i <= 9; i++) {
+    const total = char[`slots_lvl${i}_total`];
+    const used = char[`slots_lvl${i}_used`];
+    if (total || used) {
+      spellSlots[`level_${i}`] = { total: total || '', used: used || '' };
+    }
+  }
+
   const exportData = {
     personal_data: {
       name: char.charName || "",
@@ -340,10 +508,15 @@ function exportCharacter() {
       background: char.background || "",
       alignment: char.alignment || "",
       max_hp: parseInt(char.hpMax) || 0,
+      current_hp: parseInt(char.hpCurrent) || 0,
+      temp_hp: parseInt(char.hpTemp) || 0,
       armor_class: parseInt(char.ac) || 10,
       speed: char.speed || "",
       initiative: char.initiative || "+0",
-      proficiency_bonus: char.profBonus || "+2"
+      proficiency_bonus: char.profBonus || "+2",
+      hit_dice: char.hitDiceTotal || "",
+      passive_perception: parseInt(char.passivePerception) || 10,
+      inspiration: !!char.inspiration
     },
     theme_color: char.theme_color || "#b8860b",
     attributes: {
@@ -354,10 +527,51 @@ function exportCharacter() {
       wisdom: parseInt(char.wis_score) || 10,
       charisma: parseInt(char.cha_score) || 10
     },
-    proficiencies: {
-      saving_throws: extractSavingThrows(char),
-      skills: extractSkills(char)
+    saving_throws: {
+      str: { proficient: !!char.save_str_prof, mod: char.save_str_mod || '' },
+      dex: { proficient: !!char.save_dex_prof, mod: char.save_dex_mod || '' },
+      con: { proficient: !!char.save_con_prof, mod: char.save_con_mod || '' },
+      int: { proficient: !!char.save_int_prof, mod: char.save_int_mod || '' },
+      wis: { proficient: !!char.save_wis_prof, mod: char.save_wis_mod || '' },
+      cha: { proficient: !!char.save_cha_prof, mod: char.save_cha_mod || '' }
     },
+    skills: {
+      acrobatics:       { proficient: !!char.skill_acro_prof, mod: char.skill_acro_mod || '' },
+      animal_handling:  { proficient: !!char.skill_anim_prof, mod: char.skill_anim_mod || '' },
+      arcana:           { proficient: !!char.skill_arca_prof, mod: char.skill_arca_mod || '' },
+      athletics:        { proficient: !!char.skill_athl_prof, mod: char.skill_athl_mod || '' },
+      performance:      { proficient: !!char.skill_perf_prof, mod: char.skill_perf_mod || '' },
+      deception:        { proficient: !!char.skill_decp_prof, mod: char.skill_decp_mod || '' },
+      stealth:          { proficient: !!char.skill_stea_prof, mod: char.skill_stea_mod || '' },
+      history:          { proficient: !!char.skill_hist_prof, mod: char.skill_hist_mod || '' },
+      intimidation:     { proficient: !!char.skill_inti_prof, mod: char.skill_inti_mod || '' },
+      insight:          { proficient: !!char.skill_insg_prof, mod: char.skill_insg_mod || '' },
+      investigation:    { proficient: !!char.skill_invs_prof, mod: char.skill_invs_mod || '' },
+      medicine:         { proficient: !!char.skill_medi_prof, mod: char.skill_medi_mod || '' },
+      nature:           { proficient: !!char.skill_natu_prof, mod: char.skill_natu_mod || '' },
+      perception:       { proficient: !!char.skill_perc_prof, mod: char.skill_perc_mod || '' },
+      persuasion:       { proficient: !!char.skill_pers_prof, mod: char.skill_pers_mod || '' },
+      sleight_of_hand:  { proficient: !!char.skill_slei_prof, mod: char.skill_slei_mod || '' },
+      religion:         { proficient: !!char.skill_reli_prof, mod: char.skill_reli_mod || '' },
+      survival:         { proficient: !!char.skill_surv_prof, mod: char.skill_surv_mod || '' }
+    },
+    death_saves: {
+      successes: [!!char.death_save_success_1, !!char.death_save_success_2, !!char.death_save_success_3],
+      failures: [!!char.death_save_fail_1, !!char.death_save_fail_2, !!char.death_save_fail_3]
+    },
+    coins: {
+      cp: parseInt(char.cp) || 0,
+      sp: parseInt(char.sp) || 0,
+      ep: parseInt(char.ep) || 0,
+      gp: parseInt(char.gp) || 0,
+      pp: parseInt(char.pp) || 0
+    },
+    spellcasting: {
+      ability: char.spellcastingAbility || "",
+      save_dc: char.spellSaveDC || "",
+      attack_bonus: char.spellAttackBonus || ""
+    },
+    spell_slots: spellSlots,
     spells: spellsExport,
     text_areas: {
       equipment: char.equipment || "",
@@ -379,19 +593,22 @@ function exportCharacter() {
   URL.revokeObjectURL(url);
 }
 
+// ===== IMPORT JSON =====
+
 function importCharacter(input) {
   const file = input.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     try {
       const json = JSON.parse(e.target.result);
       let charId;
       let isOverwrite = false;
 
       if (currentId) {
-        if (!confirm(getTranslation('msg_confirm_overwrite'))) {
+        const confirmed = await showConfirm(getTranslation('msg_confirm_overwrite'));
+        if (!confirmed) {
           input.value = '';
           return;
         }
@@ -412,10 +629,15 @@ function importCharacter(input) {
         background: json.personal_data?.background || "",
         alignment: json.personal_data?.alignment || "",
         hpMax: json.personal_data?.max_hp || 0,
+        hpCurrent: json.personal_data?.current_hp || 0,
+        hpTemp: json.personal_data?.temp_hp || 0,
         ac: json.personal_data?.armor_class || 10,
         speed: json.personal_data?.speed || "",
         profBonus: json.personal_data?.proficiency_bonus || "+2",
         initiative: json.personal_data?.initiative || "+0",
+        hitDiceTotal: json.personal_data?.hit_dice || "",
+        passivePerception: json.personal_data?.passive_perception || 10,
+        inspiration: !!json.personal_data?.inspiration,
         theme_color: json.theme_color || "#b8860b",
         str_score: json.attributes?.strength || 10,
         dex_score: json.attributes?.dexterity || 10,
@@ -426,6 +648,75 @@ function importCharacter(input) {
         portrait: json.portrait || null
       };
 
+      // Saving throws (new format)
+      if (json.saving_throws) {
+        const attrMap = { str: 'str', dex: 'dex', con: 'con', int: 'int', wis: 'wis', cha: 'cha' };
+        for (const [key, val] of Object.entries(json.saving_throws)) {
+          if (attrMap[key]) {
+            newChar[`save_${key}_prof`] = !!val.proficient;
+            newChar[`save_${key}_mod`] = val.mod || '';
+          }
+        }
+      }
+      // Legacy format (array of names)
+      else if (json.proficiencies?.saving_throws) {
+        const saveMap = { 'Força': 'save_str_prof', 'Destreza': 'save_dex_prof', 'Constituição': 'save_con_prof', 'Inteligência': 'save_int_prof', 'Sabedoria': 'save_wis_prof', 'Carisma': 'save_cha_prof' };
+        json.proficiencies.saving_throws.forEach(s => { if (saveMap[s]) newChar[saveMap[s]] = true; });
+      }
+
+      // Skills (new format)
+      if (json.skills) {
+        const skillKeyMap = {
+          acrobatics: 'acro', animal_handling: 'anim', arcana: 'arca', athletics: 'athl',
+          performance: 'perf', deception: 'decp', stealth: 'stea', history: 'hist',
+          intimidation: 'inti', insight: 'insg', investigation: 'invs', medicine: 'medi',
+          nature: 'natu', perception: 'perc', persuasion: 'pers', sleight_of_hand: 'slei',
+          religion: 'reli', survival: 'surv'
+        };
+        for (const [key, val] of Object.entries(json.skills)) {
+          const short = skillKeyMap[key];
+          if (short) {
+            newChar[`skill_${short}_prof`] = !!val.proficient;
+            newChar[`skill_${short}_mod`] = val.mod || '';
+          }
+        }
+      }
+      // Legacy format (array of names)
+      else if (json.proficiencies?.skills) {
+        const skillMap = { 'Acrobacia': 'skill_acro_prof', 'Adestrar Animais': 'skill_anim_prof', 'Arcanismo': 'skill_arca_prof', 'Atletismo': 'skill_athl_prof', 'Enganação': 'skill_decp_prof', 'História': 'skill_hist_prof', 'Intuição': 'skill_insg_prof', 'Intimidação': 'skill_inti_prof', 'Investigação': 'skill_invs_prof', 'Medicina': 'skill_medi_prof', 'Natureza': 'skill_natu_prof', 'Percepção': 'skill_perc_prof', 'Atuação': 'skill_perf_prof', 'Persuasão': 'skill_pers_prof', 'Religião': 'skill_reli_prof', 'Prestidigitação': 'skill_slei_prof', 'Furtividade': 'skill_stea_prof', 'Sobrevivência': 'skill_surv_prof' };
+        json.proficiencies.skills.forEach(skill => {
+          const cleanSkill = skill.split('(')[0].trim();
+          if (skillMap[cleanSkill]) newChar[skillMap[cleanSkill]] = true;
+        });
+      }
+
+      // Death saves
+      if (json.death_saves) {
+        if (Array.isArray(json.death_saves.successes)) {
+          json.death_saves.successes.forEach((v, i) => { newChar[`death_save_success_${i + 1}`] = !!v; });
+        }
+        if (Array.isArray(json.death_saves.failures)) {
+          json.death_saves.failures.forEach((v, i) => { newChar[`death_save_fail_${i + 1}`] = !!v; });
+        }
+      }
+
+      // Coins
+      if (json.coins) {
+        newChar.cp = json.coins.cp || 0;
+        newChar.sp = json.coins.sp || 0;
+        newChar.ep = json.coins.ep || 0;
+        newChar.gp = json.coins.gp || 0;
+        newChar.pp = json.coins.pp || 0;
+      }
+
+      // Spellcasting stats
+      if (json.spellcasting) {
+        newChar.spellcastingAbility = json.spellcasting.ability || "";
+        newChar.spellSaveDC = json.spellcasting.save_dc || "";
+        newChar.spellAttackBonus = json.spellcasting.attack_bonus || "";
+      }
+
+      // Spells
       if (json.spells) {
         newChar.spells_cantrips = Array.isArray(json.spells.cantrips) ? json.spells.cantrips.join('\n') : "";
         for (let i = 1; i <= 9; i++) {
@@ -436,29 +727,29 @@ function importCharacter(input) {
         }
       }
 
+      // Spell slots
+      if (json.spell_slots) {
+        for (let i = 1; i <= 9; i++) {
+          const slot = json.spell_slots[`level_${i}`];
+          if (slot) {
+            newChar[`slots_lvl${i}_total`] = slot.total || '';
+            newChar[`slots_lvl${i}_used`] = slot.used || '';
+          }
+        }
+      }
+
       if (json.text_areas?.equipment) newChar.equipment = json.text_areas.equipment;
       else if (Array.isArray(json.equipment)) newChar.equipment = json.equipment.join('\n');
 
       newChar.backstory = json.text_areas?.backstory || json.character_history || "";
 
+      if (json.text_areas?.attacks) newChar.attacks = json.text_areas.attacks;
+
       if (json.text_areas?.featuresTraits) newChar.featuresTraits = json.text_areas.featuresTraits;
       else if (json.habilidades_e_talentos) newChar.featuresTraits = formatComplexTraits(json.habilidades_e_talentos);
 
       if (json.text_areas?.proficiencies) newChar.proficiencies = json.text_areas.proficiencies;
-      else if (json.proficiencies) newChar.proficiencies = formatLegacyProficiencies(json.proficiencies);
-
-      if (json.proficiencies?.saving_throws) {
-        const saveMap = { 'Força': 'save_str_prof', 'Destreza': 'save_dex_prof', 'Constituição': 'save_con_prof', 'Inteligência': 'save_int_prof', 'Sabedoria': 'save_wis_prof', 'Carisma': 'save_cha_prof' };
-        json.proficiencies.saving_throws.forEach(s => { if (saveMap[s]) newChar[saveMap[s]] = true; });
-      }
-
-      if (json.proficiencies?.skills) {
-        const skillMap = { 'Acrobacia': 'skill_acro_prof', 'Adestrar Animais': 'skill_anim_prof', 'Arcanismo': 'skill_arca_prof', 'Atletismo': 'skill_athl_prof', 'Enganação': 'skill_decp_prof', 'História': 'skill_hist_prof', 'Intuição': 'skill_insg_prof', 'Intimidação': 'skill_inti_prof', 'Investigação': 'skill_invs_prof', 'Medicina': 'skill_medi_prof', 'Natureza': 'skill_natu_prof', 'Percepção': 'skill_perc_prof', 'Atuação': 'skill_perf_prof', 'Persuasão': 'skill_pers_prof', 'Religião': 'skill_reli_prof', 'Prestidigitação': 'skill_slei_prof', 'Furtividade': 'skill_stea_prof', 'Sobrevivência': 'skill_surv_prof' };
-        json.proficiencies.skills.forEach(skill => {
-          const cleanSkill = skill.split('(')[0].trim();
-          if (skillMap[cleanSkill]) newChar[skillMap[cleanSkill]] = true;
-        });
-      }
+      else if (json.proficiencies && !json.saving_throws) newChar.proficiencies = formatLegacyProficiencies(json.proficiencies);
 
       if (isOverwrite) {
         const index = characters.findIndex(c => c.id === charId);
@@ -469,30 +760,21 @@ function importCharacter(input) {
 
       saveToStorage();
       loadCharacter(charId);
-      alert(isOverwrite ? getTranslation('msg_updated') : getTranslation('msg_imported'));
+      await showAlert(
+        isOverwrite ? getTranslation('msg_updated') : getTranslation('msg_imported'),
+        { title: getTranslation('modal_title_success'), icon: 'military_tech', iconClass: 'modal-icon-success' }
+      );
 
     } catch (error) {
       console.error(error);
-      alert('Erro ao processar o arquivo JSON.');
+      await showAlert(getTranslation('msg_json_error'), { title: getTranslation('modal_title_error'), icon: 'error', iconClass: 'modal-icon-error' });
     }
     input.value = '';
   };
   reader.readAsText(file);
 }
 
-function extractSavingThrows(char) {
-  const saves = [];
-  const map = { save_str_prof: 'Força', save_dex_prof: 'Destreza', save_con_prof: 'Constituição', save_int_prof: 'Inteligência', save_wis_prof: 'Sabedoria', save_cha_prof: 'Carisma' };
-  for (let k in map) { if (char[k]) saves.push(map[k]); }
-  return saves;
-}
-
-function extractSkills(char) {
-  const skills = [];
-  const map = { skill_acro_prof: 'Acrobacia', skill_anim_prof: 'Adestrar Animais', skill_arca_prof: 'Arcanismo', skill_athl_prof: 'Atletismo', skill_decp_prof: 'Enganação', skill_hist_prof: 'História', skill_insg_prof: 'Intuição', skill_inti_prof: 'Intimidação', skill_invs_prof: 'Investigação', skill_medi_prof: 'Medicina', skill_natu_prof: 'Natureza', skill_perc_prof: 'Percepção', skill_perf_prof: 'Atuação', skill_pers_prof: 'Persuasão', skill_reli_prof: 'Religião', skill_slei_prof: 'Prestidigitação', skill_stea_prof: 'Furtividade', skill_surv_prof: 'Sobrevivência' };
-  for (let k in map) { if (char[k]) skills.push(map[k]); }
-  return skills;
-}
+// ===== LEGACY FORMAT HELPERS =====
 
 function formatComplexTraits(data) {
   if (!data) return "";
@@ -516,6 +798,8 @@ function formatLegacyProficiencies(prof) {
   if (prof.idiomas) t += "Idiomas: " + prof.idiomas.join(', ') + "\n";
   return t;
 }
+
+// ===== INIT =====
 
 initGlobalTheme();
 initLanguage();
